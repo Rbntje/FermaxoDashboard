@@ -38,7 +38,7 @@ Enable Pages for the `main` branch and root folder. GitHub Pages serves the stat
 
 ## Current protocol scope
 
-The bridge validates the packet format and exact packet length for supported F1 25 and 2026 packet IDs. It currently decodes only Car Telemetry: speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, tyre pressures and engine temperature. The LCD is laid out for additional packet fields, but the bridge does **not** yet decode lap timing, ERS energy, FIA flags, marshal zones, Safety Car/VSC state or delta, tyre wear, session information, or leaderboard. Those fields therefore remain unavailable in live mode. Recommendations and corner speed plans are not generated without supporting telemetry.
+The bridge validates packet format and exact packet length. The wheel accepts Car Telemetry only when its packetVersion is 1 and the expected fields are present; other versions are shown as unsupported rather than interpreted. It currently decodes only Car Telemetry: speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, tyre pressures and engine temperature. The LCD is laid out for additional packet fields, but the bridge does **not** yet decode lap timing, ERS energy, FIA flags, marshal zones, Safety Car/VSC state or delta, tyre wear, session information, or leaderboard. Those fields therefore remain unavailable in live mode. Recommendations and corner speed plans are not generated without supporting telemetry.
 
 The redesign has been checked for JavaScript syntax and that every referenced interface element exists in `index.html`. It has not yet been run against a live F1 UDP session or visually verified in a browser.
 
