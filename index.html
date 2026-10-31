@@ -1,28 +1,88 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080a0d"><title>Fermaxo Racing | Wheel Display</title><link rel="stylesheet" href="styles.css"></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090c">
+<title>Fermaxo Racing | LCD</title>
+<link rel="stylesheet" href="styles.css">
+</head>
 <body>
-<main class="cockpit">
-  <div class="wheel" aria-label="Fermaxo Racing virtual steering wheel">
-    <div class="wheel-top"><div class="brand"><span class="brand-mark">F</span><span>FERMAXO <b>RACING</b><small>SIMULATION DIVISION</small></span></div><div class="rpm" id="rpmLeds" aria-label="Engine rev lights"></div><button class="round fullscreen" id="fullscreen" title="Toggle fullscreen">⛶</button></div>
-    <div class="wheel-face">
-      <aside class="controls left-controls">
-        <div class="control-cluster"><button class="wheel-button red" id="pageDrive" data-page="drive"><span>HOME</span><small>MAIN</small></button><button class="wheel-button blue" id="pageErs" data-page="ers"><span>ENERGY</span><small>PAGE 02</small></button><button class="wheel-button yellow" id="pageTiming" data-page="timing"><span>TIMING</span><small>PAGE 03</small></button></div>
-        <div class="rotary-wrap"><span>MODE</span><button class="rotary" id="pageNext" title="Next display page"><i></i></button><small id="pageLabel">01 / DRIVE</small></div>
-        <div class="control-cluster lower"><button class="wheel-button cyan" id="demoButton"><span>DEMO</span><small>MANUAL</small></button><button class="wheel-button white" id="recordButton"><span>REC</span><small>SESSION</small></button><button class="wheel-button green" id="exportButton"><span>SAVE</span><small>JSON</small></button><input id="loadFile" type="file" accept=".json,application/json" hidden></div>
-      </aside>
-      <section class="lcd" aria-live="polite">
-        <div class="lcd-head"><div><span class="eyebrow">FERMAXO RACING <i></i> TELEMETRY</span><h1 id="pageTitle">DRIVER DISPLAY</h1></div><div class="link-state"><i id="statusLed"></i><span id="statusText">WAITING FOR F1 TELEMETRY</span><button id="connectButton" title="Connect to local bridge">LINK</button></div></div>
-        <div id="alert" class="alert hidden"><b id="alertTitle"></b><span id="alertText"></span></div>
-        <div id="pageContent"></div>
-        <div class="lcd-foot"><span id="sourceLabel">NO DATA SOURCE</span><span id="udpInfo">UDP 2026 · WAITING</span><span id="ageLabel">--</span></div>
-      </section>
-      <aside class="controls right-controls">
-        <div class="control-cluster"><button class="wheel-button purple" id="pageEngineer" data-page="engineer"><span>ENGINEER</span><small>PAGE 04</small></button><button class="wheel-button orange" id="fullscreenButton"><span>VIEW</span><small>FULLSCREEN</small></button><button class="wheel-button teal" id="reconnectButton"><span>LINK</span><small>RECONNECT</small></button></div>
-        <div class="dial-stack"><div class="dial"><span>DIFF</span><b id="diffDial">--</b></div><div class="dial"><span>BBAL</span><b>--</b></div><div class="dial"><span>MAP</span><b>--</b></div></div>
-        <div class="control-cluster lower"><button class="wheel-button white" id="loadButton"><span>LOAD</span><small>SESSION</small></button><button class="wheel-button yellow" id="homeButton"><span>HOME</span><small>DRIVER</small></button><button class="wheel-button red" id="disconnectButton"><span>STOP</span><small>DEMO / LINK</small></button></div>
-      </aside>
-    </div>
-    <div class="wheel-bottom"><div class="grip left-grip"></div><div class="bottom-controls"><span>F 1</span><div class="wheel-logo">FR</div><span>26</span></div><div class="grip right-grip"></div></div>
+<main class="lcd-app">
+  <header class="status-line">
+    <span class="brand">FERMAXO <b>RACING</b></span>
+    <span class="session-tag" id="sessionLabel">STANDBY</span>
+    <span class="connection"><i id="statusLed"></i><span id="statusText">WAITING FOR F1 TELEMETRY</span></span>
+    <input id="bridgeUrl" aria-label="Telemetry bridge address" value="ws://localhost:20778" spellcheck="false">
+    <button id="connectButton" class="small-button">LINK</button>
+    <button id="fullscreenButton" class="small-button fullscreen" aria-label="Fullscreen">⛶</button>
+  </header>
+
+  <div id="eventBanner" class="event-banner hidden" role="alert">
+    <b id="eventTitle"></b><span id="eventDetail"></span>
   </div>
-  <div class="connection-drawer"><label for="bridgeUrl">BRIDGE</label><input id="bridgeUrl" value="ws://localhost:20778" spellcheck="false"><span id="packetInfo">0 PACKETS</span><span class="key-hint">F = FULLSCREEN · ← → = DISPLAY</span></div>
-</main><script src="app.js"></script></body></html>
+
+  <section id="homePage" class="screen active" aria-live="polite">
+    <div id="standbyLine" class="standby-line">WAITING FOR F1 TELEMETRY</div>
+    <div class="rev-row"><span>RPM</span><div id="rpmLeds" class="rpm-leds" aria-label="Engine rev lights"></div><b id="rpmValue">--</b></div>
+
+    <div class="drive-grid">
+      <section class="speed-block">
+        <span class="label">SPEED</span>
+        <div class="speed"><b id="speedValue">--</b><small>km/h</small></div>
+        <div class="position-line"><span>POSITION</span><b id="positionValue">--</b><span class="lap-label">LAP</span><b id="lapValue">--</b></div>
+      </section>
+
+      <section class="gear-block">
+        <span class="label">GEAR</span>
+        <b id="gearValue">N</b>
+        <small id="gearState">STANDBY</small>
+      </section>
+
+      <section class="energy-block">
+        <div class="energy-head"><span class="label">ERS ENERGY</span><b id="ersPercent">--</b></div>
+        <div class="energy-track"><i id="ersFill"></i></div>
+        <div class="energy-details">
+          <span>STORE <b id="energyStore">--</b></span>
+          <span>DEPLOY <b id="energyDeploy">--</b></span>
+          <span>HARVEST <b id="energyHarvest">--</b></span>
+        </div>
+        <div class="power-mode"><span id="aeroLabel">DRS</span><b id="aeroValue">--</b><span>BOOST</span><b id="boostValue">--</b></div>
+      </section>
+    </div>
+
+    <div class="input-bars">
+      <div class="input-row"><span>THROTTLE</span><div class="bar"><i id="throttleBar"></i></div><b id="throttleValue">--</b></div>
+      <div class="input-row"><span>BRAKE</span><div class="bar brake"><i id="brakeBar"></i></div><b id="brakeValue">--</b></div>
+    </div>
+
+    <div class="timing-line">
+      <div class="lap-clock"><span>CURRENT LAP</span><b id="lapTime">--:--.---</b></div>
+      <div class="delta"><span id="deltaLabel">Δ SESSION BEST</span><b id="deltaValue">--</b></div>
+      <div class="race-control"><span>RACE</span><b id="safetyValue">--</b></div>
+      <div class="race-flag"><span>FLAG</span><b id="flagValue">--</b></div>
+    </div>
+    <div class="sector-line">
+      <span>S1 <b id="s1Value">--:--.---</b></span>
+      <span>S2 <b id="s2Value">--:--.---</b></span>
+      <span>S3 <b id="s3Value">--:--.---</b></span>
+      <span>LAST <b id="lastLapValue">--:--.---</b></span>
+    </div>
+    <div class="engineer-line"><span>PIT</span><b id="engineerMessage">NO ACTIVE MESSAGE</b><span>PEN</span><b id="penaltyValue">--</b></div>
+  </section>
+
+  <section id="detailPage" class="screen detail-screen" aria-live="polite"></section>
+
+  <nav class="page-nav" aria-label="Display pages">
+    <button class="page-button selected" data-page="home">HOME</button>
+    <button class="page-button" data-page="ers">ERS</button>
+    <button class="page-button" data-page="laps">LAPS</button>
+    <button class="page-button" data-page="tyres">TYRES</button>
+    <button class="page-button" data-page="race">RACE</button>
+    <button class="page-button" data-page="driver">DRIVER</button>
+  </nav>
+  <div class="connection-foot"><span id="packetInfo">0 PACKETS</span><span id="sourceInfo">UDP 2026 · LOCAL BRIDGE</span><span id="ageInfo">--</span></div>
+  <input id="loadFile" type="file" accept=".json,application/json" hidden>
+</main>
+<script src="app.js"></script>
+</body></html>
