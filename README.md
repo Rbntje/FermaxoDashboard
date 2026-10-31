@@ -1,20 +1,30 @@
-# FERMAXO RACING — Virtual Wheel Display
+# FERMAXO RACING — Virtual F1 Wheel
 
-A full-screen steering wheel-inspired telemetry interface for F1 25 and its 2026 Season Pack, paired with a local UDP → WebSocket bridge.
+A full-screen, steering wheel-inspired display for F1 25 with the 2026 Season Pack and a local UDP-to-WebSocket bridge.
+
+## Quick start on Windows
+
+1. Download this repository (**Code → Download ZIP**) and extract it.
+2. Double-click `Start-Fermaxo.bat`. It installs the WebSocket dependency if needed, opens the wheel display and starts the receiver. Keep its terminal window open.
+3. In F1 25 open **Settings → Telemetry**. Enable UDP, set format to **2026**, and port to **20777**. If the game is on this PC, set receiver IP to `127.0.0.1`.
+4. The page connects to the bridge automatically. It shows **WAITING FOR F1 TELEMETRY** until real car telemetry arrives.
+
+For a console, enter the gaming PC's private LAN IP when the launcher asks for a UDP listen IP. Set that same PC IP as the console's receiver IP in game settings. Allow Python through Windows Firewall on the private network if prompted.
 
 ## Wheel controls
 
-- **DRIVE / ENERGY / TIMING / ENGINEER** buttons switch the central LCD page. The rotary-style **MODE** control advances pages; left/right arrow keys do the same.
-- **LINK** connects to the bridge at `ws://localhost:20778`; **RECONNECT** retries the connection.
-- **DEMO** is manual and clearly labelled. It is never enabled automatically.
-- **REC / SAVE / LOAD** record incoming frames in browser memory, export JSON, and replay a saved JSON file.
-- **VIEW** or the F key toggles browser fullscreen.
+- **DRIVE** is HOME: essential driving values and race alerts remain on the main LCD.
+- **ENERGY**, **TIMING**, and **ENGINEER** open secondary detail pages. The physical **HOME** button returns immediately.
+- **LINK** connects/reconnects to `ws://localhost:20778`.
+- **DEMO** is manual and labelled. It never starts automatically.
+- **REC / SAVE / LOAD** record frames in browser memory, export JSON and replay a saved JSON file.
+- **VIEW** or the F key toggles fullscreen. Arrow keys change pages.
 
-With no received game telemetry the LCD says **WAITING FOR F1 TELEMETRY**. If received packets go stale, it says **TELEMETRY CONNECTION LOST**. Missing fields display as `--` or `UNAVAILABLE`. The RPM strip responds to received RPM. Flag and Safety Car alerts appear only if those fields arrive from a source.
+When data is missing, the wheel shows `--` or `UNAVAILABLE`. It clears stale live values when the connection drops. Actual flags and Safety Car/VSC state automatically appear on HOME when the game packets report them. The VSC game delta is shown when present; this build does not invent recommended speeds or coaching.
 
-## Telemetry bridge
+## Manual bridge start
 
-Requires Python 3.10+.
+Requires Python 3.10+:
 
 ```powershell
 cd telemetry-bridge
@@ -22,27 +32,27 @@ py -m pip install -r requirements.txt
 py bridge.py
 ```
 
-In F1 25 enable UDP telemetry under **Settings → Telemetry**, select UDP format **2026** for the 2026 Season Pack, set port **20777**, and set the destination IP to the gaming PC. The bridge can receive base F1 25's **2025** format, but this wheel interface requires **2026** packets and will clearly reject the older format. Open `index.html` and press **LINK**.
-
-The bridge binds UDP, WebSocket and health endpoints to loopback by default. To receive a console's UDP stream, bind UDP to the gaming PC's private LAN address, for example:
+The bridge listens on UDP 20777 and WebSocket 20778. By default, all services bind to loopback. To receive UDP from a console, bind UDP to the gaming PC's private address:
 
 ```powershell
 py bridge.py --udp-host 192.168.1.20
 ```
 
-For a browser on another LAN device, bind `--ws-host` to the specific private interface and connect to `ws://<gaming-pc-ip>:20778`. The health endpoint is `http://localhost:20779/`.
+The dashboard still connects locally at `ws://localhost:20778`. The local health endpoint is `http://localhost:20779/`.
 
-## GitHub Pages
+GitHub Pages can serve the static wheel, but cannot receive UDP. An HTTPS Pages site cannot connect to this local insecure `ws://` bridge; use the local launcher for the simplest setup or configure a secure `wss://` endpoint yourself.
 
-Enable Pages for the `main` branch and root folder. GitHub Pages serves the static interface but cannot receive UDP. An HTTPS Pages site cannot connect to an insecure `ws://` bridge; remote use needs a properly configured `wss://` endpoint. Running the local page beside the bridge is the straightforward option.
+## Telemetry currently decoded
 
-## Current protocol scope
+The bridge checks the packet format, packet version 1 and exact 2026 packet lengths. It reads Car Telemetry, Session, Lap Data, Car Status, Event and Car Damage packets. The available fields include speed, throttle, brake, steering, gear, RPM and game rev LEDs, DRS, tyre/brake temperatures, tyre pressures/wear, lap and sector 1/2 times, race position, safety car/VSC status and delta, basic FIA flag state, fuel and ERS energy.
 
-The bridge validates packet format, packet version 1, and exact packet length. It decodes Car Telemetry, Session, Lap Data, Car Status, Event, and Car Damage packets for the player's car. This supplies live driving inputs, tyre temperatures, basic lap times and sector 1/2 values, position, ERS store and usage, fuel, Safety Car/VSC status, game delta, basic FIA flag, and tyre wear when those packets are actually available. speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, tyre pressures and engine temperature. The LCD is laid out for additional packet fields, but the bridge does **not** yet decode lap timing, ERS energy, FIA flags, marshal zones, Safety Car/VSC state or delta, tyre wear, session information, or leaderboard. Those fields therefore remain unavailable in live mode. Recommendations and corner speed plans are not generated without supporting telemetry.
+This is not yet the complete requested engineering suite. Session best laps, sector 3, double-yellow distinction, penalties as detailed messages, engineer recommendations, per-corner guidance and a real track map are not decoded. Those areas remain unavailable. The built-in demo is not live game data.
 
-The interface reconnects to the local bridge automatically and keeps the driving values visible on HOME while race alerts take priority. JavaScript syntax and interface element references are checked. A real game session and visual browser run are still needed to verify packet offsets against the user's game build.
+## Verification
+
+The browser JavaScript syntax and HTML element references were checked. I attempted a synthetic bridge parser check, but this environment has no Python installation. The bridge has not been verified against a live game packet capture, and the wheel has not been visually checked in a browser yet.
 
 ## References
 
 - [EA SPORTS F1 25 / 2026 Season Pack UDP specification](https://forums.ea.com/blog/f1-games-game-info-hub-en/ea-sports%E2%84%A2-f1%C2%AE25-2026-season-pack-udp-specification/12187347)
-- [Packet size and format notes](https://github.com/rdgonzaga/f1-game-telemetry/blob/main/docs/udp-spec.md)
+- [Packet sizes and format notes](https://github.com/rdgonzaga/f1-game-telemetry/blob/main/docs/udp-spec.md)
