@@ -124,10 +124,9 @@ def udp_loop(host,port):
                     zones=packet["marshalZones"];track_length=packet.get("trackLength",0)
                 if "lapDistance" in packet and zones and track_length>0:
                     fraction=(packet["lapDistance"]%track_length)/track_length
-                    zone_flag=next((flag for start,flag in zones if start<=fraction and flag in (1,2,3)),None)
-                    if zone_flag==1:data["flag"]="green"
-                    elif zone_flag==2:data["flag"]="blue"
-                    elif zone_flag==3:data["flag"]="yellow"
+                    active_zone=max((zone for zone in zones if zone[0]<=fraction),key=lambda zone:zone[0],default=None)
+                    zone_flag=active_zone[1] if active_zone else None
+                    data["flag"]={1:"green",2:"blue",3:"yellow"}.get(zone_flag)
                 if "safetyCarStatus" in packet:
                     data["safetyCar"]={0:None,1:"SAFETY CAR",2:"VSC",3:"FORMATION LAP"}.get(packet["safetyCarStatus"])
                 code=packet.get("eventCode")
