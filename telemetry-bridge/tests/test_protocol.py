@@ -6,6 +6,7 @@ from protocol import HEADER, SIZES, parse_packet
 def make_packet(packet_id):
     data = bytearray(SIZES[2026][packet_id])
     struct.pack_into("<H", data, 0, 2026)
+    data[2] = 25
     data[5] = 1
     data[6] = packet_id
     data[27] = 0
@@ -68,6 +69,12 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(result["tyreAgeLaps"], 3)
         self.assertEqual(result["ersMode"], 2)
         self.assertAlmostEqual(result["ersPercent"], 50)
+
+    def test_rejects_wrong_game_year(self):
+        data = make_packet(6)
+        data[2] = 24
+        with self.assertRaises(ValueError):
+            parse_packet(data)
 
     def test_rejects_wrong_size_and_version(self):
         with self.assertRaises(ValueError):
