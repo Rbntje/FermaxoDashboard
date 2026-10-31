@@ -74,6 +74,7 @@ def parse_packet(buf):
         if code=="SCAR":
             sc_type,event_type=buf[33],buf[34]
             out["safetyCar"]={1:"SAFETY CAR",2:"VSC",3:"FORMATION LAP"}.get(sc_type)
+            if event_type in (2,3): out["safetyCar"]=None
             if event_type==3: out["flag"]="green"
         elif code=="RDFL": out["flag"]="red"
         elif code=="CHQF": out["flag"]="chequered"
@@ -143,7 +144,7 @@ def handler(ws):
                 rev=latest["revision"]
                 data=latest["data"].copy() if latest["received"] else None
             # Do not send an empty packet on browser connect: wait for real UDP.
-            if data is not None and rev!=last:
+            if data is not None and "speed" in data and rev!=last:
                 ws.send(json.dumps({"type":"telemetry","data":data}));last=rev
             time.sleep(.03)
     except Exception: pass
