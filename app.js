@@ -169,13 +169,16 @@ function render(){
  const fill=$("ersFill");if(fill)fill.style.height=d&&Number.isFinite(Number(d.ersPercent))?Math.max(0,Math.min(100,Number(d.ersPercent)))+"%":"0%";
  setText("ersMode",d?modeName(d.ersMode):"--");setText("overtakeValue",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--");
  setText("aeroValue",d?aeroName(d):"--");
- const tyreOrder=[["FL",2],["FR",3],["RL",0],["RR",1]],wearValues=d&&Array.isArray(d.tyreWear)?d.tyreWear:[];
+ const tyreOrder=[["FL",2],["FR",3],["RL",0],["RR",1]],wearValues=d&&Array.isArray(d.tyreWear)?d.tyreWear:[],brakeTemps=d&&Array.isArray(d.brakeTempC)?d.brakeTempC:[];
  for(const [corner,index] of tyreOrder){
-  const temp=d&&d.tyreSurfaceTempC?Number(d.tyreSurfaceTempC[index]):NaN,wear=wearValues[index]==null?NaN:Number(wearValues[index]),pressure=d&&d.tyrePressurePsi?d.tyrePressurePsi[index]:null;
+  const temp=d&&d.tyreSurfaceTempC?Number(d.tyreSurfaceTempC[index]):NaN,wear=wearValues[index]==null?NaN:Number(wearValues[index]),pressure=d&&d.tyrePressurePsi?d.tyrePressurePsi[index]:null,brakeTemp=brakeTemps[index]==null?NaN:Number(brakeTemps[index]);
   setText("tyre"+corner+"Temp",Number.isFinite(temp)?num(temp,0,"°C"):"--");
   setText("tyre"+corner+"Wear",Number.isFinite(wear)?num(wear,0,"%"):"--");
   setText("tyre"+corner+"Pressure",pressure==null?"--":num(pressure,1));
-  const tile=$("tyre"+corner);if(tile){tile.className="main-tyre-tile tyre-"+corner.toLowerCase();if(Number.isFinite(temp))tile.classList.add(temp<70?"cold":temp>110?"hot":"normal");if(Number.isFinite(wear)&&wear>=50)tile.classList.add(wear>=70?"worn":"wear-warning")}
+  setText("tyre"+corner+"Brake",Number.isFinite(brakeTemp)?"B "+num(brakeTemp,0,"°"):"B --");
+  const tile=$("tyre"+corner),wheel=$("wheel"+corner);
+  if(tile){tile.className="main-tyre-tile tyre-"+corner.toLowerCase();if(Number.isFinite(temp))tile.classList.add(temp<70?"cold":temp>110?"hot":"normal");if(Number.isFinite(wear)&&wear>=50)tile.classList.add(wear>=70?"worn":"wear-warning")}
+  if(wheel){wheel.setAttribute("class","car-wheel"+(Number.isFinite(temp)?" "+(temp<70?"cold":temp>110?"hot":"normal"):"")+(Number.isFinite(wear)&&wear>=70?" worn":"")+(Number.isFinite(brakeTemp)&&brakeTemp>=800?" brake-hot":Number.isFinite(brakeTemp)&&brakeTemp<250?" brake-cold":""));wheel.setAttribute("aria-label",corner+" tyre "+(Number.isFinite(temp)?Math.round(temp)+" degrees":"temperature unavailable")+", wear "+(Number.isFinite(wear)?Math.round(wear)+" percent":"unavailable")+", brake "+(Number.isFinite(brakeTemp)?Math.round(brakeTemp)+" degrees":"unavailable"))}
  }
  const wearNums=wearValues.map(Number).filter(Number.isFinite),averageWear=wearNums.length===4?wearNums.reduce((a,b)=>a+b,0)/4:null;
  setText("tyreWearAverage",averageWear==null?"--":num(averageWear,0,"%"));
