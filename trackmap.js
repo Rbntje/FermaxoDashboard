@@ -6,7 +6,7 @@ function prepare(samples,trackLength,count=12){
  if(!Number.isFinite(length)||length<=0||n<2||n>64)return {valid:false,reason:"invalid track length or mini-sector count",points:[]};
  const points=[];
  for(const sample of Array.isArray(samples)?samples:[]){
-  if(!sample||sample.trackPointValid===false||!finite(sample.distance)||!finite(sample.worldX)||!finite(sample.worldZ))continue;
+  if(!sample||sample.trackPointValid!==true||!finite(sample.distance)||!finite(sample.worldX)||!finite(sample.worldZ))continue;
   const distance=Number(sample.distance),x=Number(sample.worldX),z=Number(sample.worldZ);
   if(distance<0||distance>length||!Number.isFinite(x)||!Number.isFinite(z))continue;
   if(points.length&&distance<=points[points.length-1].distance)continue;
