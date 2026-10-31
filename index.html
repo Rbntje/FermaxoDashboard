@@ -89,17 +89,41 @@
     <section class="info-box car-box">
       <header class="box-head red-head"><span>TYRE STATUS</span><small id="tyreCondition">--</small></header>
       <div class="car-tyre-layout">
-        <svg class="car-silhouette" viewBox="0 0 100 170" aria-label="Top-down car and four tyre positions">
-          <path d="M50 5 L65 24 L72 55 L68 113 L62 153 L50 166 L38 153 L32 113 L28 55 L35 24 Z" fill="#18242a" stroke="#40ddd2" stroke-width="2"/>
-          <path d="M32 48 L7 58 L10 74 L31 68 M68 48 L93 58 L90 74 L69 68 M31 110 L7 105 L10 124 L34 128 M69 110 L93 105 L90 124 L66 128" fill="#202a30" stroke="#ef3947" stroke-width="2"/>
-          <rect x="5" y="51" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/><rect x="82" y="51" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/>
-          <rect x="5" y="101" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/><rect x="82" y="101" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/>
-          <path d="M50 12 L50 156" stroke="#6f8188" stroke-width="1" stroke-dasharray="3 4"/>
+        <svg class="car-silhouette" viewBox="0 0 100 170" role="img" aria-label="Top-down 2026 Formula-style car with live wheel conditions">
+          <defs>
+            <linearGradient id="carBody" x1="0" x2="1"><stop offset="0" stop-color="#151c22"/><stop offset=".48" stop-color="#43515a"/><stop offset="1" stop-color="#11171c"/></linearGradient>
+            <linearGradient id="wingRed" x1="0" x2="1"><stop stop-color="#ff5964"/><stop offset=".48" stop-color="#a70e20"/><stop offset="1" stop-color="#ef3947"/></linearGradient>
+            <linearGradient id="wingCyan" x1="0" x2="1"><stop stop-color="#1f8f91"/><stop offset=".5" stop-color="#78fff0"/><stop offset="1" stop-color="#2a999a"/></linearGradient>
+          </defs>
+          <g class="car-aero">
+            <path d="M12 9 Q50 3 88 9 L94 13 L91 19 L72 18 L67 15 L33 15 L28 18 L9 19 L6 13 Z" fill="url(#wingRed)" stroke="#ff6370" stroke-width="1.2"/>
+            <path d="M8 20 L31 19 L38 22 L62 22 L69 19 L92 20 L89 24 L66 26 L59 25 L41 25 L34 26 L11 24 Z" fill="#222c32" stroke="url(#wingCyan)" stroke-width="1"/>
+            <path d="M16 29 L34 25 L42 32 L39 44 L29 49 L20 44 Z M84 29 L66 25 L58 32 L61 44 L71 49 L80 44 Z" fill="#131a1f" stroke="#40ddd2" stroke-width="1"/>
+            <path d="M22 44 L39 40 L43 48 L39 56 L25 59 Z M78 44 L61 40 L57 48 L61 56 L75 59 Z" fill="url(#carBody)" stroke="#ef3947" stroke-width="1"/>
+            <path d="M50 18 C43 22 40 31 42 43 L46 57 L48 72 L50 81 L52 72 L54 57 L58 43 C60 31 57 22 50 18 Z" fill="url(#carBody)" stroke="#dce7ea" stroke-width="1"/>
+            <path d="M47 24 L50 20 L53 24 L52 57 L50 69 L48 57 Z" fill="url(#wingCyan)" opacity=".9"/>
+            <path d="M43 57 L35 65 L32 78 L39 85 L46 79 L48 69 Z M57 57 L65 65 L68 78 L61 85 L54 79 L52 69 Z" fill="#28343b" stroke="#ef3947" stroke-width="1.2"/>
+            <path d="M45 64 Q50 57 55 64 L57 73 Q50 79 43 73 Z" fill="#080b0e" stroke="#8b9ba1" stroke-width="1"/>
+            <path d="M44 65 L41 62 M56 65 L59 62 M42 73 L37 79 M58 73 L63 79" stroke="#40ddd2" stroke-width="1.2"/>
+            <path d="M40 82 L34 91 L35 105 L42 119 L50 128 L58 119 L65 105 L66 91 L60 82 L55 80 L50 84 L45 80 Z" fill="url(#carBody)" stroke="#40ddd2" stroke-width="1.2"/>
+            <path d="M34 90 L24 91 L21 101 L35 106 L41 101 Z M66 90 L76 91 L79 101 L65 106 L59 101 Z" fill="#202930" stroke="#ef3947" stroke-width="1.2"/>
+            <path d="M41 91 L50 86 L59 91 L58 107 L50 117 L42 107 Z" fill="#161e24" stroke="#7d8e95" stroke-width=".8"/>
+            <path d="M46 92 L50 88 L54 92 L53 108 L50 113 L47 108 Z" fill="url(#wingRed)"/>
+            <path d="M38 109 L44 116 L50 121 L56 116 L62 109 L58 123 L50 130 L42 123 Z" fill="url(#wingCyan)" stroke="#b5fff7" stroke-width=".7"/>
+            <path d="M14 143 L34 140 L42 143 L58 143 L66 140 L86 143 L91 148 L87 153 L66 151 L61 149 L39 149 L34 151 L13 153 L9 148 Z" fill="url(#wingRed)" stroke="#ff6974" stroke-width="1.2"/>
+            <path d="M20 155 L80 155 L84 161 L75 164 L25 164 L16 161 Z" fill="#1e292f" stroke="url(#wingCyan)" stroke-width="1.2"/>
+            <path d="M50 16 L50 145" stroke="#dce7ea" stroke-width=".6" stroke-dasharray="2 3" opacity=".55"/>
+          </g>
+          <g class="car-wheel" id="wheelFL"><rect x="5" y="39" width="13" height="30" rx="5"/><path d="M7 45H16 M7 51H16 M7 57H16 M7 63H16"/></g>
+          <g class="car-wheel" id="wheelFR"><rect x="82" y="39" width="13" height="30" rx="5"/><path d="M84 45H93 M84 51H93 M84 57H93 M84 63H93"/></g>
+          <g class="car-wheel" id="wheelRL"><rect x="5" y="100" width="13" height="31" rx="5"/><path d="M7 106H16 M7 112H16 M7 118H16 M7 124H16"/></g>
+          <g class="car-wheel" id="wheelRR"><rect x="82" y="100" width="13" height="31" rx="5"/><path d="M84 106H93 M84 112H93 M84 118H93 M84 124H93"/></g>
+          <path d="M7 34 L19 37 M93 34 L81 37 M7 135 L20 132 M93 135 L80 132" stroke="#40ddd2" stroke-width="1.5"/>
         </svg>
-        <div class="main-tyre-tile tyre-fl" id="tyreFL"><b>FL</b><span id="tyreFLTemp">--</span><small id="tyreFLWear">--</small><i id="tyreFLPressure">--</i></div>
-        <div class="main-tyre-tile tyre-fr" id="tyreFR"><b>FR</b><span id="tyreFRTemp">--</span><small id="tyreFRWear">--</small><i id="tyreFRPressure">--</i></div>
-        <div class="main-tyre-tile tyre-rl" id="tyreRL"><b>RL</b><span id="tyreRLTemp">--</span><small id="tyreRLWear">--</small><i id="tyreRLPressure">--</i></div>
-        <div class="main-tyre-tile tyre-rr" id="tyreRR"><b>RR</b><span id="tyreRRTemp">--</span><small id="tyreRRWear">--</small><i id="tyreRRPressure">--</i></div>
+        <div class="main-tyre-tile tyre-fl" id="tyreFL"><b>FL</b><span id="tyreFLTemp">--</span><small id="tyreFLWear">--</small><i id="tyreFLPressure">--</i><i id="tyreFLBrake">B --</i></div>
+        <div class="main-tyre-tile tyre-fr" id="tyreFR"><b>FR</b><span id="tyreFRTemp">--</span><small id="tyreFRWear">--</small><i id="tyreFRPressure">--</i><i id="tyreFRBrake">B --</i></div>
+        <div class="main-tyre-tile tyre-rl" id="tyreRL"><b>RL</b><span id="tyreRLTemp">--</span><small id="tyreRLWear">--</small><i id="tyreRLPressure">--</i><i id="tyreRLBrake">B --</i></div>
+        <div class="main-tyre-tile tyre-rr" id="tyreRR"><b>RR</b><span id="tyreRRTemp">--</span><small id="tyreRRWear">--</small><i id="tyreRRPressure">--</i><i id="tyreRRBrake">B --</i></div>
       </div>
       <div class="tyre-meta"><b id="tyreCompound">--</b><span>STINT AGE <strong id="tyreStint">--</strong></span><span>AVG WEAR <strong id="tyreWearAverage">--</strong></span></div>
     </section>
