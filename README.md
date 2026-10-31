@@ -13,8 +13,8 @@ For a console, enter the gaming PC's private LAN IP when the launcher asks for a
 
 ## Wheel controls
 
-- **DRIVE** is HOME: essential driving values and race alerts remain on the main LCD.
-- **ENERGY**, **TIMING**, and **ENGINEER** open secondary detail pages. The physical **HOME** button returns immediately.
+- **HOME** keeps essential driving values and race alerts on the main LCD. Touch targets reflow to full-width, 50 px controls on phone-sized displays.
+- **ENERGY**, **TIMING**, and **ENGINEER** open secondary detail pages (ERS, completed session laps, tyres, fuel and received race-control messages). The physical **HOME** button returns immediately.
 - **LINK** connects/reconnects to `ws://localhost:20778`.
 - **DEMO** is manual and labelled. It never starts automatically.
 - **REC / SAVE / LOAD** record frames in browser memory, export JSON and replay a saved JSON file.
@@ -44,9 +44,9 @@ GitHub Pages can serve the static wheel, but cannot receive UDP. An HTTPS Pages 
 
 ## Telemetry currently decoded
 
-The bridge checks the packet format, packet version 1 and exact 2026 packet lengths. It reads Car Telemetry, Session, Lap Data, Car Status, Event and Car Damage packets. The available fields include speed, throttle, brake, steering, gear, RPM and game rev LEDs, DRS, tyre/brake temperatures, tyre pressures/wear, lap and sector 1/2 times, race position, safety car/VSC status and delta, basic FIA flag state, fuel and ERS energy.
+The bridge checks the packet format, packet version 1 and exact 2026 packet lengths. It reads Car Telemetry, Session, Lap Data, Session History, Car Status, Event and Car Damage packets. The available fields include speed, throttle, brake, steering, gear, RPM and game rev LEDs, DRS, tyre/brake temperatures, tyre pressures/wear, lap and sector 1/2 times, current sector 3 when in that sector, session best lap and derived delta, race position, safety car/VSC status and delta, basic FIA flag state, fuel and ERS energy.
 
-This is not yet the complete requested engineering suite. Session best laps, sector 3, double-yellow distinction, penalties as detailed messages, engineer recommendations, per-corner guidance and a real track map are not decoded. Those areas remain unavailable. The built-in demo is not live game data.
+This is not yet the complete requested engineering suite. Double-yellow distinction, detailed penalty messages, engineer recommendations, per-corner guidance and a real track map are not decoded. Those areas remain unavailable. The built-in demo is not live game data.
 
 ## Verification
 
