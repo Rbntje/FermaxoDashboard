@@ -20,6 +20,9 @@ stop = threading.Event()
 latest = {"revision":0,"received":0,"invalid":0,"data":{}}
 zones = []
 track_length = 0
+red_flag = False
+event_flag = None
+event_flag_until = 0
 
 def parse_packet(buf):
     if len(buf) < HEADER:
@@ -74,6 +77,7 @@ def parse_packet(buf):
         if code=="SCAR":
             sc_type,event_type=buf[33],buf[34]
             out["safetyCar"]={1:"SAFETY CAR",2:"VSC",3:"FORMATION LAP"}.get(sc_type)
+            out["safetyCarEventType"]=event_type
             if event_type in (2,3): out["safetyCar"]=None
             if event_type==3: out["flag"]="green"
         elif code=="RDFL": out["flag"]="red"
@@ -101,7 +105,7 @@ def parse_packet(buf):
     return out
 
 def udp_loop(host,port):
-    global zones,track_length
+    global zones,track_length,red_flag,event_flag,event_flag_until
     sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
     sock.bind((host,port));sock.settimeout(1)
@@ -126,9 +130,26 @@ def udp_loop(host,port):
                     elif zone_flag==3:data["flag"]="yellow"
                 if "safetyCarStatus" in packet:
                     data["safetyCar"]={0:None,1:"SAFETY CAR",2:"VSC",3:"FORMATION LAP"}.get(packet["safetyCarStatus"])
-                if packet.get("eventCode") in ("SCAR","RDFL","CHQF"):
-                    if "flag" in packet:data["flag"]=packet["flag"]
+                code=packet.get("eventCode")
+                if code=="RDFL":
+                    red_flag=True
+                elif code=="CHQF":
+                    event_flag="chequered";event_flag_until=0
+                elif code=="SSTA":
+                    red_flag=False;event_flag=None;event_flag_until=0;data["flag"]=None
+                elif code=="SCAR":
                     if "safetyCar" in packet:data["safetyCar"]=packet["safetyCar"]
+                    if packet.get("safetyCarEventType")==3:
+                        red_flag=False;event_flag="green";event_flag_until=time.time()+6
+                if red_flag:
+                    data["flag"]="red"
+                elif event_flag:
+                    if event_flag_until==0 or time.time()<event_flag_until:
+                        data["flag"]=event_flag
+                    else:
+                        if data.get("flag")==event_flag:data["flag"]=None
+                        event_flag=None
+                if code=="CHQF":data["flag"]="chequered"
                 data["receivedAt"]=time.time()
                 latest["received"]+=1;latest["revision"]+=1
         except (ValueError,struct.error,IndexError) as exc:
