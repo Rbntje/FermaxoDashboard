@@ -10,7 +10,7 @@ STATE.laps=readStore("fermaxoSavedLaps",[]);
 STATE.referenceId=localStorage.getItem("fermaxoReferenceLap")||"";
 STATE.miniCount=Number(localStorage.getItem("fermaxoMiniSectorCount")||12);
 if(![8,12,16,24].includes(STATE.miniCount))STATE.miniCount=12;
-let detailPage="",detailAt=0;
+let detailPage="",detailAt=0,miniCacheKey="",miniCache=null;
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function num(v,d=0,s=""){const n=Number(v);return v==null||!Number.isFinite(n)?"--":n.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})+s}
 function lapTime(v){const n=Number(v);if(v==null||!Number.isFinite(n)||n<=0)return "--:--.---";return Math.floor(n/60000)+":"+String(Math.floor(n%60000/1000)).padStart(2,"0")+"."+String(Math.floor(n%1000).toString().padStart(3,"0"))}
@@ -57,9 +57,10 @@ function referenceComparison(samples,completedTime){
  return Mini.compare({samples,trackLength:Number(d.trackLength),completedTimeMs:completedTime||null},ref,count)
 }
 function miniItems(){
- const samples=STATE.currentLapSamples.map(s=>({distance:s.distance,timeMs:s.timeMs}));
- const comparison=referenceComparison(samples,null);
- return comparison?comparison.segments:null
+ const ref=referenceLap(),key=[STATE.captureUID,STATE.currentLap,STATE.currentLapSamples.length,STATE.miniCount,ref&&ref.id].join("|");
+ if(key===miniCacheKey)return miniCache;
+ const samples=STATE.currentLapSamples.map(s=>({distance:s.distance,timeMs:s.timeMs})),comparison=referenceComparison(samples,null);
+ miniCacheKey=key;miniCache=comparison?comparison.segments:null;return miniCache
 }
 function renderMini(){
  const d=liveData(STATE.data)?STATE.data:null,ref=referenceLap(),kind=d?category(d):"standby",segments=d?miniItems():null,count=STATE.miniCount;
@@ -172,7 +173,7 @@ function renderDetail(page,d){
  const refSel=$("referenceSelect");if(refSel)refSel.onchange=e=>{STATE.referenceId=e.target.value;try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}renderedDetail="";render()};
  root.querySelectorAll(".saved-lap-button").forEach(button=>button.onclick=()=>{STATE.referenceId=button.dataset.refId;try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}detailPage="";render()});
 }
-function toggleRecording(){STATE.recording=!STATE.recording;if(STATE.recording){STATE.frames=[];STATE.lastFrameAt=0}renderedDetail="";render()}
+function toggleRecording(){STATE.recording=!STATE.recording;if(STATE.recording){STATE.recordingLimitReached=false;STATE.frames=[];STATE.lastFrameAt=0}renderedDetail="";render()}
 function recordFrame(d){
  const now=Date.now(),pid=Number(d.sourcePacketId);
  if(!STATE.recording)return;
@@ -180,10 +181,10 @@ function recordFrame(d){
  if(STATE.frames.length>=60000){STATE.recording=false;STATE.recordingLimitReached=true}
 }
 function receive(d){
- if(d.format!==2026||d.packetVersion!==1||d.packetId!==6||d.speed==null||d.rpm==null){setStatus("unsupported");return}
+ if(d.format!==2026||d.packetVersion!==1||d.packetId!==6||d.speed==null||d.rpm==null){STATE.data=null;setStatus("unsupported");render();return}
  STATE.data=d;STATE.lastPacket=Date.now();STATE.packets++;STATE.status="live";
  if(Number(d.sourcePacketId)===2&&liveData({ ...d })){captureLapSample(d)}else if(Number(d.sourcePacketId)===2&&Number(d.driverStatus)===0){STATE.currentLapSamples=[];STATE.currentLap=Number(d.lap);STATE.captureUID=String(d.sessionUID||"");STATE.captureTrack=currentTrack(d)}
- recordFrame(d);setStatus("live");render()
+ recordFrame(d);setStatus("live",STATE.recordingLimitReached?"RECORDING LIMIT · EXPORT SESSION":null);render()
 }
 function startReplay(frames){
  if(STATE.socket){STATE.socket.onclose=null;STATE.socket.close();STATE.socket=null}
