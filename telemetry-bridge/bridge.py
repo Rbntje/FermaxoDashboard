@@ -35,7 +35,9 @@ def parse_packet(buf):
     if version != 1:
         raise ValueError("unsupported packet version")
     cars = 24 if fmt == 2026 else 22
-    out = {"format":fmt,"packetVersion":version,"packetId":pid}
+    out = {"format":fmt,"packetVersion":version,"packetId":pid,
+           "sessionUID":struct.unpack_from("<Q",buf,7)[0],
+           "sessionTime":struct.unpack_from("<f",buf,15)[0]}
     if pid == 6:
         slot = 59 if fmt == 2026 else 60
         if player >= cars: raise ValueError("invalid player index")
@@ -163,6 +165,10 @@ def udp_loop(host,port):
             packet=parse_packet(buf)
             with lock:
                 data=latest["data"]
+                uid=packet.get("sessionUID")
+                if data.get("sessionUID") is not None and uid is not None and data["sessionUID"]!=uid:
+                    data.clear()
+                    zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0
                 data.update({k:v for k,v in packet.items() if k not in ("format","packetVersion","packetId","marshalZones")})
                 data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6)
                 if "marshalZones" in packet:
