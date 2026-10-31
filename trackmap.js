@@ -6,7 +6,7 @@ function prepare(samples,trackLength,count=12){
  if(!Number.isFinite(length)||length<=0||n<2||n>64)return {valid:false,reason:"invalid track length or mini-sector count",points:[]};
  const points=[];
  for(const sample of Array.isArray(samples)?samples:[]){
-  if(!sample||sample.trackPointValid!==true||!finite(sample.distance)||!finite(sample.worldX)||!finite(sample.worldZ))continue;
+  if(!sample||sample.trackPointValid!==true||sample.distance==null||sample.worldX==null||sample.worldZ==null||!finite(sample.distance)||!finite(sample.worldX)||!finite(sample.worldZ))continue;
   const distance=Number(sample.distance),x=Number(sample.worldX),z=Number(sample.worldZ);
   if(distance<0||distance>length||!Number.isFinite(x)||!Number.isFinite(z))continue;
   if(points.length&&distance<=points[points.length-1].distance)continue;
@@ -37,7 +37,7 @@ function project(points,width=360,height=190,padding=10){
   points:points.map(p=>({x:dx+(Number(p.x)-minX)*scale,y:height-dz-(Number(p.z)-minZ)*scale,distance:Number(p.distance),sector:p.sector}))};
 }
 function projectWorld(x,z,b){
- if(!b||!finite(x)||!finite(z))return null;
+ if(!b||x==null||z==null||!finite(x)||!finite(z))return null;
  return {x:b.dx+(Number(x)-b.minX)*b.scale,y:b.height-b.dz-(Number(z)-b.minZ)*b.scale};
 }
 function pointAt(points,distance,length,maxGap){
