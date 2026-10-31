@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id),Mini=window.FermaxoMiniSectors;
 const PAGES=["home","ers","timing","tyres","telemetry","race","engineer"];
 const SESSIONS={1:"PRACTICE 1",2:"PRACTICE 2",3:"PRACTICE 3",4:"SHORT PRACTICE",5:"QUALIFYING 1",6:"QUALIFYING 2",7:"QUALIFYING 3",8:"SHORT QUALIFYING",9:"ONE SHOT QUALIFYING",10:"RACE",11:"SPRINT",12:"TIME TRIAL"};
 const DRIVER={0:"GARAGE",1:"FLYING LAP",2:"IN LAP",3:"OUT LAP",4:"ON TRACK"};
-const STATE={socket:null,page:"home",status:"waiting",data:null,source:"none",packets:0,lastPacket:0,retry:null,recording:false,frames:[],replayTimer:null,frameAt:0,laps:[],referenceId:"",miniCount:12,currentLap:null,currentLapSamples:[],captureUID:null,captureTrack:null,lastFrameAt:0,healthTimer:null};
+const STATE={socket:null,page:"home",status:"waiting",data:null,source:"none",packets:0,lastPacket:0,retry:null,recording:false,frames:[],replayTimer:null,frameAt:0,laps:[],referenceId:"",miniCount:12,currentLap:null,currentLapSamples:[],currentLapIncomplete:false,captureUID:null,captureTrack:null,lastFrameAt:0,healthTimer:null};
 function readStore(key,fallback){try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch{return fallback}}
 STATE.laps=readStore("fermaxoSavedLaps",[]);
 STATE.referenceId=localStorage.getItem("fermaxoReferenceLap")||"";
@@ -31,10 +31,10 @@ function chooseDefaultReference(){const track=currentTrack(STATE.data),selected=
 function referenceLap(){chooseDefaultReference();return STATE.laps.find(x=>x.id===STATE.referenceId&&x.valid)||null}
 function captureLapSample(d,persist=true){
  const uid=d.sessionUID==null?"":String(d.sessionUID),track=currentTrack(d),lap=Number(d.lap);
- if(STATE.captureUID!==uid||STATE.captureTrack!==track){STATE.captureUID=uid;STATE.captureTrack=track;STATE.currentLap=lap;STATE.currentLapSamples=[]}
+ if(STATE.captureUID!==uid||STATE.captureTrack!==track){STATE.captureUID=uid;STATE.captureTrack=track;STATE.currentLap=lap;STATE.currentLapSamples=[];STATE.currentLapIncomplete=false}
  else if(STATE.currentLap!=null&&lap!==STATE.currentLap){
   const old=STATE.currentLapSamples,trackLength=Number(old[0]&&old[0].trackLength||d.trackLength),timeMs=Number(d.lastLapMs);
-  const valid=old.length>=STATE.miniCount*2&&timeMs>0&&old.every(s=>!s.invalid)&&old.some(s=>s.driverStatus===1||s.driverStatus===4);
+  const valid=!STATE.currentLapIncomplete&&old.length>=STATE.miniCount*2&&timeMs>0&&old.every(s=>!s.invalid)&&old.some(s=>s.driverStatus===1||s.driverStatus===4);
   if(persist&&valid&&trackLength>0){
    const sampleData=old.map(s=>({distance:s.distance,timeMs:s.timeMs}));
    const calc=Mini.calculateLap(sampleData,trackLength,STATE.miniCount,timeMs);
@@ -43,8 +43,9 @@ function captureLapSample(d,persist=true){
     STATE.laps.unshift(saved);STATE.laps=STATE.laps.slice(0,30);STATE.referenceId=saved.id;saveLaps();try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}
    }
   }
-  STATE.currentLapSamples=[];STATE.currentLap=lap;
+  STATE.currentLapSamples=[];STATE.currentLap=lap;STATE.currentLapIncomplete=false;
  }
+ if(Number(d.miniSampleGap)>0){STATE.currentLapIncomplete=true;STATE.currentLapSamples=[]}
  const distance=Number(d.lapDistance),time=Number(d.currentLapMs),length=Number(d.trackLength);
  if(!Number.isFinite(distance)||distance<0||!Number.isFinite(time)||time<0||length<=0)return;
  const prev=STATE.currentLapSamples[STATE.currentLapSamples.length-1];
@@ -57,6 +58,7 @@ function referenceComparison(samples,completedTime){
  return Mini.compare({samples,trackLength:Number(d.trackLength),completedTimeMs:completedTime||null},ref,count)
 }
 function miniItems(){
+ if(STATE.currentLapIncomplete)return null;
  const ref=referenceLap(),key=[STATE.captureUID,STATE.currentLap,STATE.currentLapSamples.length,STATE.miniCount,ref&&ref.id].join("|");
  if(key===miniCacheKey)return miniCache;
  const samples=STATE.currentLapSamples.map(s=>({distance:s.distance,timeMs:s.timeMs})),comparison=referenceComparison(samples,null);
@@ -183,13 +185,13 @@ function recordFrame(d){
 function receive(d){
  if(d.format!==2026||d.packetVersion!==1||d.packetId!==6||d.speed==null||d.rpm==null){STATE.data=null;setStatus("unsupported");render();return}
  STATE.data=d;STATE.lastPacket=Date.now();STATE.packets++;STATE.status="live";
- if(Number(d.sourcePacketId)===2&&liveData({ ...d })){captureLapSample(d)}else if(Number(d.sourcePacketId)===2&&Number(d.driverStatus)===0){STATE.currentLapSamples=[];STATE.currentLap=Number(d.lap);STATE.captureUID=String(d.sessionUID||"");STATE.captureTrack=currentTrack(d)}
+ if(Number(d.sourcePacketId)===2&&liveData({ ...d })){captureLapSample(d)}else if(Number(d.sourcePacketId)===2&&Number(d.driverStatus)===0){STATE.currentLapSamples=[];STATE.currentLapIncomplete=false;STATE.currentLap=Number(d.lap);STATE.captureUID=String(d.sessionUID||"");STATE.captureTrack=currentTrack(d)}
  recordFrame(d);setStatus("live",STATE.recordingLimitReached?"RECORDING LIMIT · EXPORT SESSION":null);render()
 }
 function startReplay(frames){
  if(STATE.socket){STATE.socket.onclose=null;STATE.socket.close();STATE.socket=null}
  clearTimeout(STATE.retry);clearTimeout(STATE.replayTimer);STATE.source="replay";STATE.recording=false;let i=0,lastAt=null;
- STATE.currentLapSamples=[];STATE.currentLap=null;STATE.captureUID=null;const step=()=>{if(i>=frames.length){setStatus("live","REPLAY COMPLETE · RECORDED DATA");return}
+ STATE.currentLapSamples=[];STATE.currentLapIncomplete=false;STATE.currentLap=null;STATE.captureUID=null;const step=()=>{if(i>=frames.length){setStatus("live","REPLAY COMPLETE · RECORDED DATA");return}
   const f=frames[i++],next=f.data||f;STATE.data=next;STATE.lastPacket=Date.now();STATE.packets++;STATE.status="live";if(Number(next.sourcePacketId)===2&&liveData({...next}))captureLapSample(next,false);render();
   const t=Number(f.at),delay=lastAt==null?80:Math.max(20,Math.min(500,t-lastAt));lastAt=Number.isFinite(t)?t:lastAt;STATE.replayTimer=setTimeout(step,delay)
  };
@@ -199,7 +201,7 @@ function connect(){
  clearTimeout(STATE.retry);clearTimeout(STATE.replayTimer);STATE.replayTimer=null;
  const address=$("bridgeUrl").value.trim();if(!address)return;
  if(STATE.socket){STATE.socket.onclose=null;STATE.socket.close();STATE.socket=null}
- STATE.source="live";STATE.data=null;STATE.lastPacket=0;STATE.captureUID=null;STATE.currentLap=null;STATE.currentLapSamples=[];setStatus("connecting");render();
+ STATE.source="live";STATE.data=null;STATE.lastPacket=0;STATE.captureUID=null;STATE.currentLap=null;STATE.currentLapSamples=[];STATE.currentLapIncomplete=false;setStatus("connecting");render();
  try{const ws=new WebSocket(address);STATE.socket=ws;
   ws.onopen=()=>{if(STATE.socket===ws){setStatus("connected");try{localStorage.setItem("fermaxoBridgeUrl",address)}catch{}render()}};
   ws.onmessage=e=>{try{const m=JSON.parse(e.data);receive(m.data||m)}catch{setStatus("disconnected","INVALID BRIDGE MESSAGE");render()}};
