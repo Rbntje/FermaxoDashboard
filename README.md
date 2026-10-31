@@ -22,7 +22,7 @@ py -m pip install -r requirements.txt
 py bridge.py
 ```
 
-In F1 25 enable UDP telemetry under **Settings → Telemetry**, select UDP format **2026** for the 2026 Season Pack, set port **20777**, and set the destination IP to the gaming PC. Base F1 25's **2025** format is also accepted by the bridge. Open `index.html` and press **LINK**.
+In F1 25 enable UDP telemetry under **Settings → Telemetry**, select UDP format **2026** for the 2026 Season Pack, set port **20777**, and set the destination IP to the gaming PC. The bridge can receive base F1 25's **2025** format, but this wheel interface requires **2026** packets and will clearly reject the older format. Open `index.html` and press **LINK**.
 
 The bridge binds UDP, WebSocket and health endpoints to loopback by default. To receive a console's UDP stream, bind UDP to the gaming PC's private LAN address, for example:
 
