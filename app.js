@@ -164,7 +164,7 @@ function render(){
  setText("speedValue",d?num(d.speed):"--");setText("gearValue",d?Number(d.gear)===0?"N":Number(d.gear)<0?"R":num(d.gear):"N");
  const pb=personalBest();setText("lapTime",d?lapTime(d.currentLapMs):"--:--.---");const pbDeltaTime=d&&pb?referenceLapTimeAt(Number(d.lapDistance),pb):null;setText("deltaValue",d?(pbDeltaTime==null?signedMs(d.deltaMs):signedMs(Number(d.currentLapMs)-pbDeltaTime)):"--");setText("deltaLabel",pbDeltaTime!=null?"DELTA TO PERSONAL BEST":kind==="qualifying"?"DELTA TO SESSION BEST":"GAME DELTA");
  setText("lastLapValue",d?lapTime(d.lastLapMs):"--:--.---");const bestLabel=document.querySelector(".lap-best span");setText("bestLapValue",pb?lapTime(pb.timeMs):d?lapTime(d.bestLapMs):"--:--.---");if(bestLabel)bestLabel.textContent=pb?"PERSONAL BEST":"SESSION BEST";
- setText("s1Value",d?lapTime(d.s1Ms):"--:--.---");setText("s2Value",d?lapTime(d.s2Ms):"--:--.---");setText("s3Value",d?lapTime(d.s3Ms):"--:--.---");
+ setText("s1Value",d?lapTime(d.s1Ms):"--:--.---");setText("s2Value",d?lapTime(d.s2Ms):"--:--.---");setText("s3Value",d?lapTime(d.s3Ms):"--:--.---");setText("fuelValue",d&&d.fuelKg!=null?num(d.fuelKg,1," kg"):"--");setText("fuelRange",d&&d.fuelRemainingLaps!=null?num(d.fuelRemainingLaps,1," laps"):"--");
  setText("ersPercent",d?num(d.ersPercent,0,"%"):"--");setText("energyStore",d?num(d.energyKj,0):"--");setText("energyDeploy",d?num(d.energyUsedLapKj,0):"--");setText("energyHarvest",d?num(d.energyHarvestedLapKj,0):"--");
  const fill=$("ersFill");if(fill)fill.style.height=d&&Number.isFinite(Number(d.ersPercent))?Math.max(0,Math.min(100,Number(d.ersPercent)))+"%":"0%";
  setText("ersMode",d?modeName(d.ersMode):"--");setText("overtakeValue",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--");
@@ -184,6 +184,7 @@ function render(){
  setText("tyreCondition",averageWear==null?(wearNums.length?"PARTIAL DATA":"--"):averageWear>=70?"WORN · "+num(averageWear,0,"%"):averageWear>=50?"CHECK · "+num(averageWear,0,"%"):"AVG "+num(averageWear,0,"%"));setText("drsValue",d&&d.drs?"OPEN":d&&d.drsAllowed?"CLOSED":d&&d.regulations2026Applicable?"NOT USED":"--");
  setText("throttleValue",d?num(d.throttle*100,0,"%"):"--");setText("brakeValue",d?num(d.brake*100,0,"%"):"--");
  const tb=$("throttleBar"),bb=$("brakeBar");if(tb)tb.style.width=d?Math.max(0,Math.min(100,Number(d.throttle)*100))+"%":"0%";if(bb)bb.style.width=d?Math.max(0,Math.min(100,Number(d.brake)*100))+"%":"0%";
+ setText("steerValue",d&&d.steer!=null?num(d.steer*100,0,"%"):"--");const steerBar=$("steerBar");if(steerBar&&d&&d.steer!=null){steerBar.style.width=Math.max(0,Math.min(100,Math.abs(Number(d.steer))*100))+"%";steerBar.style.marginLeft=(Number(d.steer)<0?100-Math.abs(Number(d.steer))*100:0)+"%"}else if(steerBar){steerBar.style.width="0%";steerBar.style.marginLeft="0%"}
  setText("safetyValue",d?(d.safetyCar||"CLEAR"):"--");setText("flagValue",d&&d.flag?String(d.flag).toUpperCase():"--");
  setText("penaltyValue",d&&d.penalties!=null?num(d.penalties,0,d.penalties?"s":""):"--");setText("driverStatusValue",d&&DRIVER[d.driverStatus]||"--");
  const leds=$("rpmLeds");leds.replaceChildren();if(d&&d.revLightsBits!=null){for(let i=0;i<15;i++){const e=document.createElement("i"),on=(Number(d.revLightsBits)&(1<<i))!==0;e.className=(on?"on ":"")+(i<9?"cyan":i<12?"amber":"red");leds.append(e)}}else if(d&&d.revLightsPercent!=null){for(let i=0;i<15;i++){const e=document.createElement("i"),on=i<Math.round(d.revLightsPercent/100*15);e.className=(on?"on ":"")+(i<9?"cyan":i<12?"amber":"red");leds.append(e)}}
@@ -229,14 +230,8 @@ function miniMeasurements(samples,index,length,count){
  return {points:part.length,meanSpeed:speed.length?speed.reduce((a,b)=>a+b,0)/speed.length:null,minSpeed:speed.length?Math.min(...speed):null,meanThrottle:throttle.length?throttle.reduce((a,b)=>a+b,0)/throttle.length:null,meanBrake:brake.length?brake.reduce((a,b)=>a+b,0)/brake.length:null,maxBrake:brake.length?Math.max(...brake):null};
 }
 function renderDetail(page,d){
- const root=$("detailPage");let h='<header class="detail-heading"><span>FERMAXO RACING / LIVE ENGINEERING</span><b>'+({ers:"ERS SYSTEM",timing:"LAP & MINI-SECTOR TIMING",tyres:"TYRE ENGINEERING",telemetry:"TELEMETRY ANALYSIS",race:"RACE CONTROL",engineer:"RACE ENGINEER"}[page]||"DETAIL")+'</b></header>';
- if(page==="ers"){
-  if(page==="engineer")h+='<h2 class="analysis-section">ENERGY / ACTIVE AERO</h2>';
-  h+='<div class="detail-grid">'+row("BATTERY",d?num(d.ersPercent,1,"%"):"--")+row("ENERGY STORE",d?num(d.energyKj,1," kJ"):"--")+row("DEPLOYED THIS LAP",d?num(d.energyUsedLapKj,1," kJ"):"--")+row("HARVESTED THIS LAP",d?num(d.energyHarvestedLapKj,1," kJ"):"--")+row("DEPLOYMENT MODE",d?modeName(d.ersMode):"--")+row("OVERTAKE MODE",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--")+row("ACTIVE AERO",d?aeroName(d):"--")+'</div>';
-  const vals=recordedData().slice(-22).map(x=>Number(x.ersPercent)).filter(Number.isFinite);
-  h+='<section class="energy-trace"><b>RECORDED BATTERY TRACE</b><div>'+vals.map(v=>'<i title="'+v.toFixed(1)+'%" style="height:'+Math.max(2,Math.min(100,v))+'%"></i>').join("")+'</div><small>'+(vals.length?vals.length+" CAPTURED SAMPLES":"NO RECORDED SAMPLES · START REC IN TIMING")+'</small></section>';
- }
- if(page==="timing"||page==="engineer"){
+ const root=$("detailPage");let h='<header class="detail-heading"><span>FERMAXO RACING / LIVE ENGINEERING</span><b>LAP PERFORMANCE ANALYSIS</b></header>';
+ if(page==="engineer"){
   if(page==="engineer")h+='<h2 class="analysis-section">LAP AND MINI-SECTOR ANALYSIS</h2>';
   h+='<div class="detail-tools"><button id="recordButton">'+(STATE.recording?"STOP REC":"START REC")+'</button><button id="saveSessionButton">SAVE JSON</button><button id="saveCsvButton">EXPORT CSV</button><button id="saveLapsButton">EXPORT LAPS</button><button id="loadLapsButton">LOAD FILE</button><span>'+STATE.frames.length+' SAMPLES</span></div>';
   h+='<label class="reference-control">REFERENCE LAP <select id="referenceSelect">'+refOptions()+'</select></label>';
@@ -248,23 +243,12 @@ function renderDetail(page,d){
   h+='<div class="saved-lap-history"><b>SAVED MINI-SECTOR HISTORY · TAP A LAP TO SET REFERENCE</b><div>'+ (savedRows||'<small>NO COMPLETE VALID LAPS SAVED</small>') +'</div></div>';
   h+='<p class="detail-note">MINI-SECTORS ARE CALCULATED FROM RECEIVED LAP-DISTANCE / LAP-TIME SAMPLES, NOT GAME-PROVIDED SECTORS.</p>';
  }
- if(page==="tyres"){
-  if(page==="engineer")h+='<h2 class="analysis-section">TYRE ANALYSIS</h2>';
-  const order=[2,3,0,1],names=["FL","FR","RL","RR"],wear=d&&d.tyreWear||[],surface=d&&d.tyreSurfaceTempC||[],inner=d&&d.tyreInnerTempC||[],pressure=d&&d.tyrePressurePsi||[],actual=d&&d.actualTyreCompound,visual=d&&d.visualTyreCompound;
-  const compound=actual!=null?({16:"C5",17:"C4",18:"C3",19:"C2",20:"C1",21:"C0",22:"C6",7:"INTER",8:"WET"})[actual]||"COMPOUND "+actual:"--";
-  h+='<div class="detail-grid tyre-summary">'+row("ACTUAL COMPOUND",compound)+row("VISUAL COMPOUND",visual!=null?({16:"SOFT",17:"MEDIUM",18:"HARD",7:"INTER",8:"WET"})[visual]||"COMPOUND "+visual:"--")+row("TYRE SET AGE",d?num(d.tyreAgeLaps,0," laps"):"--")+'</div>';
-  h+='<div class="tyre-grid">'+order.map((idx,i)=>'<section class="tyre-cell"><b>'+names[i]+'</b><span>WEAR <strong>'+val(wear[idx],"%")+'</strong></span><span>SURFACE <strong>'+val(surface[idx]," °C")+'</strong></span><span>INNER <strong>'+val(inner[idx]," °C")+'</strong></span><span>PRESSURE <strong>'+val(pressure[idx]," psi")+'</strong></span></section>').join("")+'</div>';
- }
- if(page==="telemetry"||page==="engineer"){
+ if(page==="engineer"){
   if(page==="engineer")h+='<h2 class="analysis-section">RECORDED TELEMETRY</h2>';
   const ref=referenceLap(),sample=d&&ref&&d.lapDistance!=null?referenceSampleAt(Number(d.lapDistance),ref):null;
   h+='<div class="detail-tools"><span>ONLY CAPTURED LIVE SAMPLES ARE PLOTTED · '+STATE.frames.length+' SAMPLES</span></div>';
   h+='<div class="graph-stack">'+graph("SPEED km/h","speed",360)+graph("THROTTLE %","throttle",1)+graph("BRAKE %","brake",1)+graph("ENGINE RPM","rpm",15000)+graph("GEAR","gear",8)+'</div>';
   h+='<div class="detail-grid">'+row("CURRENT LAP",d?lapTime(d.currentLapMs):"--")+row("REFERENCE LAP",ref?lapTime(ref.timeMs):"--")+row("SPEED VS REF",d&&sample&&sample.speed!=null?num(Number(d.speed)-Number(sample.speed),0," km/h"):"--")+row("THROTTLE VS REF",d&&sample&&sample.throttle!=null?num((Number(d.throttle)-Number(sample.throttle))*100,0," %"):"--")+row("BRAKE VS REF",d&&sample&&sample.brake!=null?num((Number(d.brake)-Number(sample.brake))*100,0," %"):"--")+'</div>';
- }
- if(page==="race"){
-  if(page==="engineer")h+='<h2 class="analysis-section">RACE AND SESSION INFORMATION</h2>';
-  h+='<div class="detail-grid">'+row("SESSION",d?category(d)==="finished"?"FINISHED":SESSIONS[d.sessionType]||"SESSION":"--")+row("POSITION",d?num(d.position):"--")+row("LAP",d?num(d.lap)+" / "+num(d.totalLaps):"--")+row("GAP AHEAD",d?signedMs(d.gapToCarAheadMs):"--")+row("GAP TO LEADER",d?signedMs(d.gapToLeaderMs):"--")+row("GAME SC DELTA",d?signedSeconds(d.scDelta):"--")+row("RACE CONTROL",d?d.safetyCar||"CLEAR":"--")+row("PIT STATUS",d?({0:"NOT IN PIT",1:"PITTING",2:"PIT LANE"})[d.pitStatus]||"--":"--")+row("PIT STOPS",d?num(d.numPitStops):"--")+row("PIT-LANE TIME",d&&d.pitLaneTimerActive?num(d.pitLaneTimeMs/1000,1," s"):"--")+row("PENALTY TIME",d?num(d.penalties,0," s"):"--")+row("DRIVE-THROUGH LEFT",d?num(d.unservedDriveThrough):"--")+row("STOP-GO LEFT",d?num(d.unservedStopGo):"--")+row("WARNINGS",d?num(d.totalWarnings):"--")+row("FUEL",d?num(d.fuelKg,1," kg"):"--")+row("FUEL REMAINING",d?num(d.fuelRemainingLaps,1," laps"):"--")+'</div>';
  }
  if(page==="engineer"){
   h+='<h2 class="analysis-section">DRIVER IMPROVEMENT</h2>';
