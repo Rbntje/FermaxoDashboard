@@ -54,7 +54,6 @@ def udp_loop(host,port):
                 if data.get("sessionUID") is not None and uid is not None and data["sessionUID"]!=uid:
                     data.clear()
                     zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0
-                    lap_updates.clear()
                 data.update({k:v for k,v in packet.items() if k not in ("format","packetVersion","packetId","marshalZones")})
                 data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6,sourcePacketId=packet["packetId"])
                 if "marshalZones" in packet:
@@ -110,7 +109,10 @@ def handler(ws):
                 revision=latest["revision"]
                 data=latest["data"].copy() if latest["received"] else None
                 pending=[(seq,sample.copy()) for seq,sample in lap_updates if seq>last_lap_sequence]
-                if pending:last_lap_sequence=pending[-1][0]
+                if pending:
+                    if pending[0][0]>last_lap_sequence+1:
+                        pending[0][1]["miniSampleGap"]=pending[0][0]-last_lap_sequence-1
+                    last_lap_sequence=pending[-1][0]
             # Preserve every Lap Data sample for mini-sector timing; then send latest live state.
             for _,sample in pending:
                 ws.send(json.dumps({"type":"telemetry","data":sample}))
