@@ -38,7 +38,7 @@ function render(){
  document.body.dataset.flag=d&&d.flag?String(d.flag).toLowerCase():"";
  setText("sessionLabel",d?(sessions[d.sessionType]||"SESSION"):"STANDBY");
  setText("topLap",d?num(d.lap):"--");setText("topPosition",d?num(d.position):"--");
- setText("standbyLine",d?"":state.source==="none"||state.source==="live"&&state.status==="connected"?"STANDBY · WAITING FOR SESSION":"STANDBY · NO ACTIVE SESSION");
+ setText("standbyLine",d?"":state.status==="stale"||state.status==="disconnected"||state.status==="unsupported"?"TELEMETRY UNAVAILABLE · CHECK LINK":"STANDBY · WAITING FOR SESSION");
  $("standbyLine").classList.toggle("hidden",!!d);
  setText("sessionTypeValue",d?(sessions[d.sessionType]||"SESSION"):"--");
  setText("lapValue",d?num(d.lap):"--");setText("positionValue",d?num(d.position):"--");
@@ -50,7 +50,7 @@ function render(){
  setText("s1Value",d?msTime(d.s1Ms):"--:--.---");setText("s2Value",d?msTime(d.s2Ms):"--:--.---");setText("s3Value",d?msTime(d.s3Ms):"--:--.---");
  setText("ersPercent",d?num(d.ersPercent,0,"%"):"--");setText("energyStore",d?num(d.energyKj,0):"--");setText("energyDeploy",d?num(d.energyUsedLapKj,0):"--");setText("energyHarvest",d?num(d.energyHarvestedLapKj,0):"--");width("ersFill",d?d.ersPercent:null);
  setText("ersMode",d?modeName(d.ersMode):"--");setText("overtakeValue",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--");
- setText("aeroLabel",d&&d.regulations2026Applicable?"ACTIVE AERO":"ACTIVE AERO");setText("aeroValue",aeroName(d));setText("drsValue",d&&d.drs!=null?(d.drs?"OPEN":"CLOSED"):"--");
+ setText("aeroLabel",d&&d.regulations2026Applicable?"ACTIVE AERO":"ACTIVE AERO");setText("aeroValue",aeroName(d));setText("drsValue",d&&d.drs? "OPEN":d&&d.drsAllowed?"CLOSED":d&&d.regulations2026Applicable?"NOT USED":"--");
  setText("throttleValue",d?num(d.throttle*100,0,"%"):"--");setText("brakeValue",d?num(d.brake*100,0,"%"):"--");
  const tb=$("throttleBar"),bb=$("brakeBar");if(tb)tb.style.width=d?Math.max(0,Math.min(100,Number(d.throttle)*100))+"%":"0%";if(bb)bb.style.width=d?Math.max(0,Math.min(100,Number(d.brake)*100))+"%":"0%";
  setText("safetyValue",d?(d.safetyCar||"CLEAR"):"--");setText("flagValue",d&&d.flag?String(d.flag).toUpperCase():"--");
@@ -83,7 +83,7 @@ function renderDetail(page,d){
    h+='<div class="tyre-grid">'+order.map((idx,i)=>'<section class="tyre-cell"><b>'+names[i]+'</b><span>WEAR <strong>'+value(wear[idx],"%")+'</strong></span><span>SURFACE <strong>'+value(surface[idx]," °C")+'</strong></span><span>INNER <strong>'+value(inner[idx]," °C")+'</strong></span><span>PRESSURE <strong>'+value(pressure[idx]," psi")+'</strong></span></section>').join("")+'</div>';
  }
  if(page==="telemetry"){
-   h+='<div class="detail-grid">'+row("SPEED",d?num(d.speed,0," km/h"):"--")+row("ENGINE RPM",d?num(d.rpm):"--")+row("GEAR",d?num(d.gear):"--")+row("THROTTLE",d?num(d.throttle*100,0,"%"):"--")+row("BRAKE",d?num(d.brake*100,0,"%"):"--")+row("STEERING",d?num(d.steer*100,0,"%"):"--")+row("BRAKE TEMPS",d&&d.brakeTempC?d.brakeTempC.map(x=>num(x)+"°").join(" / "):"--")+row("ENGINE TEMP",d?num(d.engineTempC," °C"):"--")+row("AERO MODE",d?aeroName(d):"--")+row("DRS",d&&d.drs!=null?(d.drs?"OPEN":"CLOSED"):"--")+'</div><p class="detail-note">LIVE VALUES COME FROM THE GAME UDP PACKET · RECORDED SAMPLES: '+state.frames.length+'</p>';
+   h+='<div class="detail-grid">'+row("SPEED",d?num(d.speed,0," km/h"):"--")+row("ENGINE RPM",d?num(d.rpm):"--")+row("GEAR",d?num(d.gear):"--")+row("THROTTLE",d?num(d.throttle*100,0,"%"):"--")+row("BRAKE",d?num(d.brake*100,0,"%"):"--")+row("STEERING",d?num(d.steer*100,0,"%"):"--")+row("BRAKE TEMPS",d&&d.brakeTempC?d.brakeTempC.map(x=>num(x)+"°").join(" / "):"--")+row("ENGINE TEMP",d?num(d.engineTempC,0," °C"):"--")+row("AERO MODE",d?aeroName(d):"--")+row("DRS",d&&d.drs!=null?(d.drs?"OPEN":"CLOSED"):"--")+'</div><p class="detail-note">LIVE VALUES COME FROM THE GAME UDP PACKET · RECORDED SAMPLES: '+state.frames.length+'</p>';
  }
  if(page==="race"){
    h+='<div class="detail-grid">'+row("SESSION",d?sessions[d.sessionType]||"SESSION":"--")+row("POSITION",d?num(d.position):"--")+row("LAP",d?num(d.lap)+" / "+num(d.totalLaps):"--")+row("GAP AHEAD",d?signedMs(d.gapToCarAheadMs):"--")+row("GAP TO LEADER",d?signedMs(d.gapToLeaderMs):"--")+row("SAFETY CAR DELTA",d?signedSeconds(d.scDelta):"--")+row("RACE CONTROL",d?d.safetyCar||"CLEAR":"--")+row("PIT STATUS",d?({0:"NOT IN PIT",1:"PITTING",2:"PIT LANE"})[d.pitStatus]||"--":"--")+row("PIT STOPS",d?num(d.numPitStops):"--")+row("PENALTY TIME",d?num(d.penalties,0," s"):"--")+row("WARNINGS",d?num(d.totalWarnings):"--")+row("FUEL",d?num(d.fuelKg,1," kg"):"--")+row("FUEL REMAINING",d?num(d.fuelRemainingLaps,1," laps"):"--")+'</div>';
@@ -100,7 +100,6 @@ function go(page){if(!pages.includes(page))return;state.page=page;renderedDetail
 function connect(){
  clearTimeout(state.retry);clearInterval(state.replay);state.replay=null;
  const input=$("bridgeUrl"),address=input.value.trim();if(!address)return;
- try{localStorage.setItem("fermaxoBridgeUrl",address)}catch{}
  if(state.socket){state.socket.onclose=null;state.socket.close();state.socket=null}
  state.source="live";state.data=null;state.lastPacket=0;setStatus("connecting");render();
  try{
