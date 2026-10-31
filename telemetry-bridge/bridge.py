@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Loopback-first F1 25 / 2026 UDP to WebSocket bridge."""
+"""F1 25 / 2026 Season Pack UDP to a local phone dashboard."""
 import argparse
 import json
 import os
@@ -49,7 +49,8 @@ def parse_packet(buf):
           revLightsPercent=buf[o+19],revLightsBits=struct.unpack_from("<H",buf,o+20)[0],
           brakeTempC=list(struct.unpack_from("<4H",buf,o+22)),
           tyreSurfaceTempC=list(struct.unpack_from("<4B",buf,o+30)),
-          tyreInnerTempC=list(struct.unpack_from("<4B",buf,o+34)))
+          tyreInnerTempC=list(struct.unpack_from("<4B",buf,o+34)),
+          surfaceType=list(struct.unpack_from("<4B",buf,o+55)) if fmt==2026 else [])
         out["engineTempC"] = buf[o+38] if fmt == 2026 else struct.unpack_from("<H",buf,o+38)[0]
         out["tyrePressurePsi"] = list(struct.unpack_from("<4f",buf,o+(39 if fmt==2026 else 40)))
     elif pid == 16 and fmt == 2026:
@@ -77,8 +78,17 @@ def parse_packet(buf):
           currentLapMs=struct.unpack_from("<I",buf,o+4)[0],s1Ms=s1,s2Ms=s2,
           lapDistance=struct.unpack_from("<f",buf,o+20)[0],
           scDelta=struct.unpack_from("<f",buf,o+28)[0],
-          position=buf[o+32],lap=buf[o+33],sector=buf[o+36],
-          penalties=buf[o+38])
+          gapToCarAheadMs=struct.unpack_from("<H",buf,o+14)[0]+60000*buf[o+16],
+          gapToLeaderMs=struct.unpack_from("<H",buf,o+17)[0]+60000*buf[o+19],
+          position=buf[o+32],lap=buf[o+33],pitStatus=buf[o+34],numPitStops=buf[o+35],
+          sector=buf[o+36],currentLapInvalid=buf[o+37],penalties=buf[o+38],
+          totalWarnings=buf[o+39],cornerCuttingWarnings=buf[o+40],
+          unservedDriveThrough=buf[o+41],unservedStopGo=buf[o+42],
+          gridPosition=buf[o+43],driverStatus=buf[o+44],resultStatus=buf[o+45],
+          pitLaneTimerActive=buf[o+46],pitLaneTimeMs=struct.unpack_from("<H",buf,o+47)[0],
+          pitStopTimeMs=struct.unpack_from("<H",buf,o+49)[0],penaltyAtPitStop=buf[o+51],
+          speedTrapFastestKph=struct.unpack_from("<f",buf,o+52)[0],
+          speedTrapFastestLap=buf[o+56])
         out["s3Ms"]=max(0,out["currentLapMs"]-s1-s2) if out["sector"]==2 else None
     elif pid == 3:
         code=buf[29:33].decode("ascii","replace")
@@ -123,9 +133,15 @@ def parse_packet(buf):
         harvest_k=struct.unpack_from("<f",buf,o+42)[0]
         harvest_h=struct.unpack_from("<f",buf,o+46)[0]
         deployed=struct.unpack_from("<f",buf,o+54 if fmt==2026 else o+50)[0]
-        out.update(fuelKg=fuel,ersPercent=max(0,min(100,store/4000000*100)),
+        out.update(fuelKg=fuel,fuelRemainingLaps=struct.unpack_from("<f",buf,o+13)[0],
+          drsAllowed=bool(buf[o+22]),actualTyreCompound=buf[o+25],
+          visualTyreCompound=buf[o+26],tyreAgeLaps=buf[o+27],
+          ersPercent=max(0,min(100,store/4000000*100)),
           energyKj=store/1000,energyUsedLapKj=deployed/1000,
-          energyHarvestedLapKj=(harvest_k+harvest_h)/1000,ersMode=mode,boost=(mode==3))
+          energyHarvestedLapKj=(harvest_k+harvest_h)/1000,
+          enginePowerICE=struct.unpack_from("<f",buf,o+29)[0]/1000,
+          enginePowerMGUK=struct.unpack_from("<f",buf,o+33)[0]/1000,
+          ersMode=mode,boost=(mode==3))
         out["flag"]={0:None,1:"green",2:"blue",3:"yellow"}.get(fia)
     elif pid == 10:
         if player >= cars: raise ValueError("invalid player index")
