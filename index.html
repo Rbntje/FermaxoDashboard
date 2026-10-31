@@ -4,85 +4,106 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07090c">
-<title>Fermaxo Racing | LCD</title>
+<title>Fermaxo Racing LCD</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <main class="lcd-app">
-  <header class="status-line">
-    <span class="brand">FERMAXO <b>RACING</b></span>
-    <span class="session-tag" id="sessionLabel">STANDBY</span>
-    <span class="connection"><i id="statusLed"></i><span id="statusText">WAITING FOR F1 TELEMETRY</span></span>
-    <input id="bridgeUrl" aria-label="Telemetry bridge address" value="ws://localhost:20778" spellcheck="false">
-    <button id="connectButton" class="small-button">LINK</button>
-    <button id="fullscreenButton" class="small-button fullscreen" aria-label="Fullscreen">⛶</button>
-  </header>
+<header class="topline">
+  <span class="brand">FERMAXO <b>RACING</b></span>
+  <span id="sessionLabel" class="session-chip">STANDBY</span>
+  <span class="top-stat">LAP <b id="topLap">--</b></span>
+  <span class="top-stat">POS <b id="topPosition">--</b></span>
+  <span class="connection"><i id="statusLed"></i><b id="statusText">WAITING FOR F1 TELEMETRY</b></span>
+  <button id="connectButton" class="header-button">CONNECT</button>
+  <button id="settingsButton" class="header-button settings-toggle" aria-label="Settings">⚙</button>
+</header>
 
-  <div id="eventBanner" class="event-banner hidden" role="alert">
-    <b id="eventTitle"></b><span id="eventDetail"></span>
+<section id="settingsPanel" class="settings-panel hidden" aria-label="Connection settings">
+  <label for="bridgeUrl">BRIDGE ADDRESS</label>
+  <input id="bridgeUrl" value="ws://localhost:20778" spellcheck="false" autocomplete="url">
+  <button id="saveSettingsButton">SAVE & CONNECT</button>
+  <button id="fullscreenButton">FULLSCREEN</button>
+  <span id="settingsHelp">Phone and PC must use the same local network.</span>
+</section>
+
+<div id="eventBanner" class="event-banner hidden" role="alert">
+  <b id="eventTitle"></b><span id="eventDetail"></span>
+</div>
+
+<section id="homePage" class="screen active" aria-live="polite">
+  <div id="standbyLine" class="standby-line">STANDBY · NO ACTIVE SESSION</div>
+  <div class="rpm-row">
+    <span class="micro-label">RPM</span>
+    <div id="rpmLeds" class="rpm-leds" aria-label="Game rev lights"></div>
+    <b id="rpmValue" class="rpm-value">--</b>
+    <span class="mini-stat">SESSION <b id="sessionTypeValue">--</b></span>
+    <span class="mini-stat">LAP <b id="lapValue">--</b></span>
+    <span class="mini-stat">POS <b id="positionValue">--</b></span>
   </div>
 
-  <section id="homePage" class="screen active" aria-live="polite">
-    <div id="standbyLine" class="standby-line">WAITING FOR F1 TELEMETRY</div>
-    <div class="rev-row"><span>RPM</span><div id="rpmLeds" class="rpm-leds" aria-label="Engine rev lights"></div><b id="rpmValue">--</b></div>
+  <div class="main-grid">
+    <section class="info-box speed-box">
+      <header class="box-head red-head"><span>SPEED</span><small>KM/H</small></header>
+      <b id="speedValue" class="speed-value">--</b>
+      <div class="pedal-box">
+        <div class="pedal-line"><span>THROTTLE</span><div class="bar"><i id="throttleBar"></i></div><b id="throttleValue">--</b></div>
+        <div class="pedal-line"><span>BRAKE</span><div class="bar brake"><i id="brakeBar"></i></div><b id="brakeValue">--</b></div>
+      </div>
+    </section>
 
-    <div class="drive-grid">
-      <section class="speed-block">
-        <span class="label">SPEED</span>
-        <div class="speed"><b id="speedValue">--</b><small>km/h</small></div>
-        <div class="position-line"><span>POSITION</span><b id="positionValue">--</b><span class="lap-label">LAP</span><b id="lapValue">--</b></div>
-      </section>
+    <section class="info-box center-box">
+      <header class="box-head cyan-head"><span>GEAR</span><small>LIVE</small></header>
+      <b id="gearValue" class="gear-value">N</b>
+      <div class="center-timing">
+        <div><span>CURRENT LAP</span><b id="lapTime">--:--.---</b></div>
+        <div class="delta-box"><span id="deltaLabel">DELTA</span><b id="deltaValue">--</b></div>
+      </div>
+    </section>
 
-      <section class="gear-block">
-        <span class="label">GEAR</span>
-        <b id="gearValue">N</b>
-        <small id="gearState">STANDBY</small>
-      </section>
-
-      <section class="energy-block">
-        <div class="energy-head"><span class="label">ERS ENERGY</span><b id="ersPercent">--</b></div>
-        <div class="energy-track"><i id="ersFill"></i></div>
-        <div class="energy-details">
-          <span>STORE <b id="energyStore">--</b></span>
-          <span>DEPLOY <b id="energyDeploy">--</b></span>
-          <span>HARVEST <b id="energyHarvest">--</b></span>
+    <section class="info-box ers-box">
+      <header class="box-head purple-head"><span>ERS ENERGY</span><b id="ersPercent">--</b></header>
+      <div class="ers-content">
+        <div class="battery-shell"><i id="ersFill"></i></div>
+        <div class="ers-readouts">
+          <div class="ers-store"><span>ENERGY STORE</span><b id="energyStore">--</b><small>kJ</small></div>
+          <div><span>DEPLOYED / LAP</span><b id="energyDeploy">--</b><small>kJ</small></div>
+          <div><span>HARVESTED / LAP</span><b id="energyHarvest">--</b><small>kJ</small></div>
+          <div><span>ERS MODE</span><b id="ersMode">--</b></div>
         </div>
-        <div class="power-mode"><span id="aeroLabel">DRS</span><b id="aeroValue">--</b><span>BOOST</span><b id="boostValue">--</b></div>
-      </section>
-    </div>
+      </div>
+      <div class="ers-status-row"><span>OVERTAKE</span><b id="overtakeValue">--</b></div>
+    </section>
+  </div>
 
-    <div class="input-bars">
-      <div class="input-row"><span>THROTTLE</span><div class="bar"><i id="throttleBar"></i></div><b id="throttleValue">--</b></div>
-      <div class="input-row"><span>BRAKE</span><div class="bar brake"><i id="brakeBar"></i></div><b id="brakeValue">--</b></div>
-    </div>
+  <div class="timing-grid">
+    <div class="timing-cell lap-last"><span>LAST LAP</span><b id="lastLapValue">--:--.---</b></div>
+    <div class="timing-cell lap-best"><span>SESSION BEST</span><b id="bestLapValue">--:--.---</b></div>
+    <div class="timing-cell sector"><span>S1</span><b id="s1Value">--:--.---</b></div>
+    <div class="timing-cell sector"><span>S2</span><b id="s2Value">--:--.---</b></div>
+    <div class="timing-cell sector"><span>S3</span><b id="s3Value">--:--.---</b></div>
+    <div class="timing-cell aero-cell"><span id="aeroLabel">ACTIVE AERO</span><b id="aeroValue">--</b></div>
+    <div class="timing-cell drs-cell"><span>DRS</span><b id="drsValue">--</b></div>
+    <div class="timing-cell race-cell"><span>RACE CONTROL</span><b id="safetyValue">--</b></div>
+    <div class="timing-cell flag-cell"><span>FLAG</span><b id="flagValue">--</b></div>
+  </div>
+  <div class="engineer-line"><span>PENALTIES</span><b id="penaltyValue">--</b><span>STATUS</span><b id="driverStatusValue">--</b></div>
+</section>
 
-    <div class="timing-line">
-      <div class="lap-clock"><span>CURRENT LAP</span><b id="lapTime">--:--.---</b></div>
-      <div class="delta"><span id="deltaLabel">Δ SESSION BEST</span><b id="deltaValue">--</b></div>
-      <div class="race-control"><span>RACE</span><b id="safetyValue">--</b></div>
-      <div class="race-flag"><span>FLAG</span><b id="flagValue">--</b></div>
-    </div>
-    <div class="sector-line">
-      <span>S1 <b id="s1Value">--:--.---</b></span>
-      <span>S2 <b id="s2Value">--:--.---</b></span>
-      <span>S3 <b id="s3Value">--:--.---</b></span>
-      <span>LAST <b id="lastLapValue">--:--.---</b></span>
-    </div>
-    <div class="engineer-line"><span>PIT</span><b id="engineerMessage">NO ACTIVE MESSAGE</b><span>PEN</span><b id="penaltyValue">--</b></div>
-  </section>
+<section id="detailPage" class="screen detail-screen" aria-live="polite"></section>
 
-  <section id="detailPage" class="screen detail-screen" aria-live="polite"></section>
-
-  <nav class="page-nav" aria-label="Display pages">
-    <button class="page-button selected" data-page="home">HOME</button>
-    <button class="page-button" data-page="ers">ERS</button>
-    <button class="page-button" data-page="laps">LAPS</button>
-    <button class="page-button" data-page="tyres">TYRES</button>
-    <button class="page-button" data-page="race">RACE</button>
-    <button class="page-button" data-page="driver">DRIVER</button>
-  </nav>
-  <div class="connection-foot"><span id="packetInfo">0 PACKETS</span><span id="sourceInfo">UDP 2026 · LOCAL BRIDGE</span><span id="ageInfo">--</span></div>
-  <input id="loadFile" type="file" accept=".json,application/json" hidden>
+<nav class="page-nav" aria-label="Display pages">
+  <button class="page-button selected" data-page="home">HOME</button>
+  <button class="page-button" data-page="ers">ERS</button>
+  <button class="page-button" data-page="timing">TIMING</button>
+  <button class="page-button" data-page="tyres">TYRES</button>
+  <button class="page-button" data-page="telemetry">TELEMETRY</button>
+  <button class="page-button" data-page="race">RACE</button>
+  <button class="page-button" data-page="engineer">ENGINEER</button>
+</nav>
+<footer class="bottomline"><span id="packetInfo">0 PACKETS</span><span id="sourceInfo">F1 UDP · 2026</span><span id="ageInfo">--</span></footer>
+<input id="loadFile" type="file" accept=".json,application/json" hidden>
 </main>
 <script src="app.js"></script>
-</body></html>
+</body>
+</html>
