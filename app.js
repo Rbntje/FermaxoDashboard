@@ -95,7 +95,7 @@ function trackSvgMarkup(hostId,d,ref,geo,detailed){
  if(!all.length)return '<div class="track-map-empty">TRACK MAP UNAVAILABLE</div>';
  const base=all.map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ")+" "+all[0].x.toFixed(1)+","+all[0].y.toFixed(1);
  const mini=Track.split(geo.points,length,count),comp=miniItems()||[],lapDistance=d&&Number.isFinite(Number(d.lapDistance))?Number(d.lapDistance):null;
- const current=lapDistance==null?-1:Math.max(0,Math.min(count-1,Math.floor(Math.min(lapDistance,length-.001)/length*count)));
+ const current=lapDistance==null||lapDistance<0||length<=0?-1:Math.max(0,Math.min(count-1,Math.floor(Math.min(lapDistance,length-.001)/length*count)));
  let paths="";
  for(let i=0;i<mini.length;i++){
   const pts=mini[i].points;
@@ -130,7 +130,7 @@ function renderTrackMap(hostId,d,detailed){
   return;
  }
  const comp=miniItems()||[],lapDistance=d&&Number.isFinite(Number(d.lapDistance))?Number(d.lapDistance):null;
- const idx=lapDistance==null?-1:Math.max(0,Math.min(STATE.miniCount-1,Math.floor(Math.min(lapDistance,Number(ref.trackLength)-.001)/Number(ref.trackLength)*STATE.miniCount)));
+ const idx=lapDistance==null||lapDistance<0||Number(ref.trackLength)<=0?-1:Math.max(0,Math.min(STATE.miniCount-1,Math.floor(Math.min(lapDistance,Number(ref.trackLength)-.001)/Number(ref.trackLength)*STATE.miniCount)));
  const statuses=comp.map((x,i)=>i===idx&&d?"active":x&&x.deltaMs!=null?x.deltaMs<0?"gain":x.deltaMs>0?"loss":"neutral":"neutral").join(",");
  const routeKey=[ref.id,STATE.miniCount,idx,STATE.selectedMini,statuses].join("|");
  if(trackRouteKeys[hostId]!==routeKey){host.innerHTML=trackSvgMarkup(hostId,d,ref,geo,detailed);trackRouteKeys[hostId]=routeKey;
