@@ -1,38 +1,42 @@
-# FERMAXO RACING — F1 25 LCD
+# FERMAXO RACING — F1 25 / 2026 Season Pack LCD
 
-A full-screen, phone-first telemetry display for **F1 25 with the 2026 Season Pack**. The display uses a compact Formula-style LCD layout with Fermaxo red and cyan accents, high contrast timing boxes and a large gear readout. It draws no steering wheel or hardware.
+A phone-first telemetry LCD for **EA SPORTS F1 25 with the 2026 Season Pack**. Its compact information boxes take inspiration from Formula-style steering-wheel displays and use Fermaxo red, cyan, black and white. The application draws only the digital screen.
 
 ## Quick start on Windows
 
 1. Download or clone this repository and extract it.
-2. Double-click `Start-Fermaxo.bat`. On first run it checks Python, installs the bridge dependency and starts the dashboard. Keep the terminal window open.
-3. In F1 25 open **Settings → Telemetry** and set UDP telemetry on, format **2026**, port **20777**.
-4. For a game running on the same PC, use receiver IP `127.0.0.1`. For a console, set receiver IP to the gaming PC's LAN address and enter that same LAN address when the launcher asks for UDP listen IP.
-5. Connect the phone to the same Wi-Fi network as the PC and open the **PHONE URL** shown in the dashboard's settings panel (or in the terminal health output). Rotate to landscape and use **FULLSCREEN**.
+2. Double-click `Start-Fermaxo.bat`. It checks Python, installs the bridge dependency if needed, and opens the dashboard. Leave its terminal window open while using the display.
+3. In F1 25, open **Settings → Telemetry**. Enable UDP telemetry, choose format **2026**, and set port **20777**.
+4. If the game runs on this PC, set receiver IP to `127.0.0.1`. For a console, enter the gaming PC's LAN IP as the game receiver and use the same IP when the launcher asks for UDP listen IP.
+5. Connect the phone to the same Wi-Fi network and open the **PHONE URL** shown in the dashboard's settings panel. Rotate to landscape and tap **FULLSCREEN**.
 
-If Windows Firewall prompts, allow Python on the private network. The dashboard opens on the PC at `http://127.0.0.1:20780/`. Use **CONNECT** to retry the WebSocket connection. The bridge URL is remembered by the browser.
+Allow Python through Windows Firewall on the private network if prompted. The PC dashboard opens at `http://127.0.0.1:20780/`. Connection status and packet counts are shown in the compact settings overlay. The browser remembers the last bridge address.
 
-## Main driving screen
+## Exactly two display pages
 
-The LCD keeps the gear, speed, RPM shift lights, throttle, brake, ERS charge and deployment, lap timing, position, sectors, active-aero mode, DRS, race-control state and flags visible together. Session layouts adjust emphasis for practice, qualifying and race. SC, VSC and decoded flag notifications appear automatically on the main display. Alerts use values received from the game.
+### MAIN
 
-When no car/session data is available, the display stays in neutral standby and shows unavailable readings as `--`. The 2026 active-aero mode is displayed only when the packet marks the feature available. Straight-line mode is not assumed to be DRS.
+The landscape-first, no-scroll driving LCD keeps gear, speed, RPM shift lights, throttle, brake, ERS charge and energy values, lap and sector timing, position, aero mode, DRS (only when applicable), race control, flags and calculated mini-sector deltas visible. Practice, qualifying and race sessions adjust emphasis automatically. Event banners are sourced from received game data and do not replace the key readings.
 
-## Detail pages
+The ERS battery stays prominent on MAIN. Active aero displays Straight Line Mode or Cornering Mode only when the 2026 telemetry says it is available. DRS remains a separate field.
 
-Touch **HOME**, **ERS**, **TIMING**, **TYRES**, **TELEMETRY**, **RACE** or **ENGINEER** to switch LCD pages. HOME returns to the driving screen. Detail pages include live decoded data, lap history, tyre state, recorded traces, gaps, penalties and race control.
+### ENGINEER
 
-Use **START REC** on a detail page to capture session frames. Export the session as JSON or CSV from TIMING; saved laps can also be exported/imported as JSON and replayed. Captures stay in browser storage until exported. A valid reference lap is selected for comparison on the same track.
+ENGINEER is the only detail page. It combines lap history and comparison, mini-sector detail, saved telemetry graphs, ERS history and modes, tyre state, race and session data, and measured driver-improvement notes. Saved laps can be selected as the comparison reference. Use its recording and export controls to save session data.
 
-## Measured mini-sector comparison
+Lap consistency is calculated from recorded valid laps on the current track. A mini-sector loss recommendation identifies its measured mini-sector and time difference. Corner-by-corner advice is withheld unless a verified track map exists; this repository does not currently include one.
 
-Mini-sectors are calculated from real lap-distance/time samples received from F1 25 and interpolated at equal-distance boundaries. The comparison becomes available after a complete, continuous recorded lap and a valid reference lap. Missing sample ranges are not guessed; affected mini-sectors remain `--`. Change the mini-sector count in settings (8, 12, 16 or 24).
+Use the two large bottom controls to switch instantly between MAIN and ENGINEER. Connection settings remain in a small overlay, not another page.
 
-The delta is current mini-sector time minus reference time: negative is a measured gain and positive is a measured loss. This is a distance-based comparison, not an official game mini-sector feed. Detailed driver suggestions are limited to the measured comparison data; the system does not invent a target speed, corner instruction or strategy.
+## Recorded mini-sectors
 
-## Bridge and network
+F1 UDP supplies official sector times, but not the detailed mini-sector comparisons shown here. Mini-sectors are calculated from real lap-distance/time samples and a complete valid reference lap. They are clearly labelled as calculated. Equal-distance boundaries are interpolated only across sufficiently close received samples; missing ranges remain unavailable. Negative delta means measured gain, positive delta means measured loss.
 
-Requires Python 3.10 or later. To start manually:
+The dashboard saves valid completed laps in browser storage (up to 30). Export/import lap JSON to back them up or use them on another browser. Session recording also supports JSON, CSV and recorded-data replay. No telemetry is synthesized; absent readings display `--` or standby.
+
+## Local bridge
+
+Requires Python 3.10 or later. For manual startup:
 
 ```powershell
 cd telemetry-bridge
@@ -40,29 +44,29 @@ py -m pip install -r requirements.txt
 py bridge.py --udp-host 127.0.0.1 --udp-port 20777
 ```
 
-The bridge receives UDP on port **20777**, provides WebSocket telemetry on **20778**, and serves the dashboard and health endpoint on **20780**. The web and WebSocket services listen on the local network so a phone can connect. For console telemetry, bind UDP to the gaming PC's LAN address, for example:
+UDP receives on **20777**, WebSocket streams on **20778**, and HTTP serves the dashboard and health endpoint on **20780**. The web and WebSocket services bind to local network interfaces for phone access. For console telemetry, bind UDP to the gaming PC LAN address, such as:
 
 ```powershell
 py bridge.py --udp-host 192.168.1.20 --udp-port 20777
 ```
 
-Open `http://<PC-address>:20780/health` for bridge status, packet counts and the phone URL.
+The health endpoint is `http://<PC-address>:20780/health`.
 
-## Telemetry and data limits
+## Telemetry and availability limits
 
-The bridge validates packet sizes and accepts F1 25 2026 Season Pack packet format 2026. It decodes car telemetry, session, lap data, event, session history, car status, car damage and car telemetry 2. This supplies speed, controls, RPM/rev lights, lap and sector timing, session bests, gaps, safety-car delta, basic flags, tyre state, ERS, active aero and overtake state.
+The bridge validates packet size and packet version separately for the F1 25 2026 Season Pack format. It decodes car telemetry, session, lap data, event, session history, car status, car damage and Car Telemetry 2, including 2026 active-aero/overtake fields.
 
-The game feed does not provide every requested engineer value. The app does not infer double-yellow distinctions, target speed, safety-car gap, or corner-by-corner guidance when the UDP packets do not contain reliable data. These values stay unavailable. Mini-sector times are derived only from sampled laps as described above.
+The game feed does not provide every possible engineer metric. The app does not infer a target speed, direct gap to the safety car, unreported flag types, or corner names without reliable source data. Those values remain unavailable. No live game session or phone browser is available in the development environment, so verify UDP delivery and device fit on the target setup.
 
 ## Tests
 
-Run the browser-side mini-sector tests with Node.js:
+Run the frontend regression and mini-sector tests with Node.js:
 
 ```powershell
-node --test tests/minisectors.test.js
+node --test tests/*.test.js
 ```
 
-Run the UDP parser tests with Python:
+Run parser tests and compile the Python bridge:
 
 ```powershell
 cd telemetry-bridge
@@ -70,4 +74,4 @@ py -m unittest discover -s tests -v
 py -m py_compile bridge.py protocol.py
 ```
 
-The parser tests use packet fixtures. A live F1 session, console network and phone browser are required to verify actual UDP delivery and device fit.
+Packet tests use fixtures. They do not replace a live F1 telemetry session.
