@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """F1 25 / 2026 Season Pack UDP to a local phone dashboard."""
 import argparse
+from collections import deque
 import json
 import os
 import socket
@@ -21,8 +22,10 @@ red_flag = False
 event_flag = None
 event_flag_until = 0
 bridge_config = {}
+lap_updates = deque(maxlen=500)
+lap_sequence = 0
 def udp_loop(host,port):
-    global zones,track_length,red_flag,event_flag,event_flag_until
+    global zones,track_length,red_flag,event_flag,event_flag_until,lap_sequence
     sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
     try:
@@ -51,6 +54,7 @@ def udp_loop(host,port):
                 if data.get("sessionUID") is not None and uid is not None and data["sessionUID"]!=uid:
                     data.clear()
                     zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0
+                    lap_updates.clear()
                 data.update({k:v for k,v in packet.items() if k not in ("format","packetVersion","packetId","marshalZones")})
                 data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6,sourcePacketId=packet["packetId"])
                 if "marshalZones" in packet:
@@ -86,23 +90,34 @@ def udp_loop(host,port):
                     data["deltaMs"]=data["currentLapMs"]-data["bestLapMs"]
                 data["receivedAt"]=time.time()
                 latest["received"]+=1;latest["revision"]+=1
+                if packet["packetId"]==2:
+                    lap_sequence+=1
+                    sample=data.copy()
+                    sample["sessionUID"]=str(sample.get("sessionUID",""))
+                    lap_updates.append((lap_sequence,sample))
         except (ValueError,struct.error,IndexError) as exc:
             with lock: latest["invalid"]+=1
             print("Dropped UDP packet:",exc,flush=True)
     sock.close()
 
 def handler(ws):
-    last=0
+    last_revision=0
+    with lock:
+        last_lap_sequence=lap_sequence
     try:
         while not stop.is_set():
             with lock:
-                rev=latest["revision"]
+                revision=latest["revision"]
                 data=latest["data"].copy() if latest["received"] else None
-            # Do not send an empty packet on browser connect: wait for real UDP.
-            if data is not None and "speed" in data and rev!=last:
+                pending=[(seq,sample.copy()) for seq,sample in lap_updates if seq>last_lap_sequence]
+                if pending:last_lap_sequence=pending[-1][0]
+            # Preserve every Lap Data sample for mini-sector timing; then send latest live state.
+            for _,sample in pending:
+                ws.send(json.dumps({"type":"telemetry","data":sample}))
+            if data is not None and "speed" in data and revision!=last_revision:
                 data["sessionUID"]=str(data.get("sessionUID",""))
-                ws.send(json.dumps({"type":"telemetry","data":data}));last=rev
-            time.sleep(.03)
+                ws.send(json.dumps({"type":"telemetry","data":data}));last_revision=revision
+            time.sleep(.01)
     except Exception: pass
 
 class Health(SimpleHTTPRequestHandler):
