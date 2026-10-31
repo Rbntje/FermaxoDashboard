@@ -24,7 +24,7 @@ test("accepts an endpoint sample that matches the measured lap completion time",
 test("reports real gains as negative delta and losses as positive delta",()=>{
  const x=compare(current,reference,4);
  assert.equal(x.valid,true);
- assert.deepEqual(x.segments.map(s=>Math.round(s.deltaMs)),[-5000,-4000,-3000,null]);
+ assert.deepEqual(x.segments.map(s=>s.deltaMs==null?null:Math.round(s.deltaMs)),[-5000,-4000,-3000,null]);
 });
 test("does not interpolate through a large missing sample gap",()=>{
  const x=calculateLap([{distance:0,timeMs:0},{distance:800,timeMs:80000},{distance:1000,timeMs:100000}],1000,4,100000);
