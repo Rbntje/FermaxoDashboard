@@ -17,6 +17,7 @@ function active(){return state.data&&sessionKind(state.data)!=="standby"&&state.
 function setText(id,value){const el=$(id);if(el)el.textContent=value}
 function setWidth(id,value){const n=Number(value);const el=$(id);if(el)el.style.width=Number.isFinite(n)?Math.max(0,Math.min(100,n*100))+"%":"0%"}
 function render(){const d=active()?state.data:null;document.body.dataset.session=d?sessionKind(d):"standby";document.body.dataset.raceControl=d&&d.safetyCar==="VSC"?"vsc":d&&d.safetyCar==="SAFETY CAR"?"safety":"";
+document.body.dataset.flag=d&&d.flag?String(d.flag).toLowerCase():"";
 setText("sessionLabel",d?(sessions[d.sessionType]||"SESSION"):"STANDBY");
 setText("standbyLine",d?"":state.source==="none"?"WAITING FOR F1 TELEMETRY":"STANDBY · NO ACTIVE SESSION");$("standbyLine").classList.toggle("hidden",!!d);
 setText("speedValue",d?number(d.speed):"--");setText("gearValue",d?Number(d.gear)===0?"N":number(d.gear):"N");setText("gearState",d?"LIVE":"STANDBY");setText("rpmValue",d?number(d.rpm):"--");
