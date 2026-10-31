@@ -94,6 +94,15 @@ def parse_packet(buf):
                 valid=buf[o+13]
                 if lap_ms>0 and valid&1: best.append(lap_ms)
             if best: out["bestLapMs"]=min(best)
+            history=[]
+            for i in range(count):
+                o=36+i*14
+                lap_ms=struct.unpack_from("<I",buf,o)[0]
+                s1=struct.unpack_from("<H",buf,o+4)[0]+60000*buf[o+6]
+                s2=struct.unpack_from("<H",buf,o+7)[0]+60000*buf[o+9]
+                s3=struct.unpack_from("<H",buf,o+10)[0]+60000*buf[o+12]
+                history.append({"lap":i+1,"time":lap_ms,"s1":s1,"s2":s2,"s3":s3,"valid":buf[o+13]&1==1})
+            out["lapHistory"]=history
     elif pid == 7:
         if player >= cars: raise ValueError("invalid player index")
         slot=59 if fmt==2026 else 55
