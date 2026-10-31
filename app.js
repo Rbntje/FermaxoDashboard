@@ -225,6 +225,14 @@ function referenceLapTimeAt(distance,ref){
  }
  return null;
 }
+function miniMeasurements(samples,index,length,count){
+ if(!Array.isArray(samples)||!Number.isFinite(Number(length))||length<=0)return null;
+ const start=index*length/count,end=(index+1)*length/count,part=samples.filter(x=>Number(x.distance)>=start&&Number(x.distance)<end);
+ if(!part.length)return null;
+ const values=key=>part.map(x=>Number(x[key])).filter(Number.isFinite);
+ const speed=values("speed"),throttle=values("throttle"),brake=values("brake");
+ return {points:part.length,meanSpeed:speed.length?speed.reduce((a,b)=>a+b,0)/speed.length:null,minSpeed:speed.length?Math.min(...speed):null,meanThrottle:throttle.length?throttle.reduce((a,b)=>a+b,0)/throttle.length:null,meanBrake:brake.length?brake.reduce((a,b)=>a+b,0)/brake.length:null,maxBrake:brake.length?Math.max(...brake):null};
+}
 function renderDetail(page,d){
  const root=$("detailPage");let h='<header class="detail-heading"><span>FERMAXO RACING / LIVE ENGINEERING</span><b>'+({ers:"ERS SYSTEM",timing:"LAP & MINI-SECTOR TIMING",tyres:"TYRE ENGINEERING",telemetry:"TELEMETRY ANALYSIS",race:"RACE CONTROL",engineer:"RACE ENGINEER"}[page]||"DETAIL")+'</b></header>';
  if(page==="ers"){
@@ -265,10 +273,12 @@ function renderDetail(page,d){
  }
  if(page==="engineer"){
   h+='<h2 class="analysis-section">DRIVER IMPROVEMENT</h2>';
-  const comp=miniItems(),loss=comp?comp.filter(s=>s.deltaMs!=null).sort((a,b)=>b.deltaMs-a.deltaMs)[0]:null,ref=referenceLap(),sample=d&&ref&&d.lapDistance!=null?referenceSampleAt(Number(d.lapDistance),ref):null;
+  const comp=miniItems(),ref=referenceLap();
+  const idx=STATE.selectedMini,selected=comp&&comp[idx],currentMini=miniMeasurements(STATE.currentLapSamples,idx,Number(d&&d.trackLength),STATE.miniCount),referenceMini=miniMeasurements(ref&&ref.samples,idx,Number(d&&d.trackLength),STATE.miniCount);
+  const miniMetric=(a,b,key,suffix="",digits=1)=>a&&b&&a[key]!=null&&b[key]!=null?(a[key]-b[key]>=0?"+":"")+(a[key]-b[key]).toFixed(digits)+suffix:"--";
   const trackLaps=STATE.laps.filter(x=>x&&x.valid&&d&&String(x.trackId)===String(d.trackId)).map(x=>Number(x.timeMs)).filter(Number.isFinite),mean=trackLaps.length?trackLaps.reduce((a,b)=>a+b,0)/trackLaps.length:0,spread=trackLaps.length>1?Math.sqrt(trackLaps.reduce((a,b)=>a+(b-mean)**2,0)/trackLaps.length):null;
   h+='<div class="detail-grid">'+row("SAVED LAPS",trackLaps.length)+row("LAP CONSISTENCY",spread==null?"--":(spread/1000).toFixed(3)+" s standard deviation")+'</div>';
-  h+='<div class="detail-grid">'+row("CURRENT DELTA",d?signedMs(d.deltaMs):"--")+row("REFERENCE",ref?lapTime(ref.timeMs):"--")+row("CURRENT SPEED",d?num(d.speed,0," km/h"):"--")+row("REFERENCE SPEED",sample?num(sample.speed,0," km/h"):"--")+row("CURRENT THROTTLE",d?num(d.throttle*100,0,"%"):"--")+row("REFERENCE THROTTLE",sample&&sample.throttle!=null?num(sample.throttle*100,0,"%"):"--")+row("CURRENT BRAKE",d?num(d.brake*100,0,"%"):"--")+row("REFERENCE BRAKE",sample&&sample.brake!=null?num(sample.brake*100,0,"%"):"--")+'</div>';
+  h+='<div class="detail-grid">'+row("SELECTED MINI-SECTOR","M"+String(idx+1).padStart(2,"0"))+row("MINI DELTA",selected?signedMs(selected.deltaMs):"--")+row("REFERENCE LAP",ref?lapTime(ref.timeMs):"--")+row("LIVE LAP DELTA",d? signedMs(d.deltaMs):"--")+row("AVG SPEED VS REF",currentMini&&referenceMini?num(currentMini.meanSpeed,1," / ")+num(referenceMini.meanSpeed,1," km/h"):"--")+row("MIN SPEED CHANGE",miniMetric(currentMini,referenceMini,"minSpeed"," km/h"))+row("AVG THROTTLE CHANGE",miniMetric(currentMini,referenceMini,"meanThrottle"," %",3))+row("AVG BRAKE CHANGE",miniMetric(currentMini,referenceMini,"meanBrake"," %",3))+row("CURRENT POINTS",currentMini?num(currentMini.points):"--")+'</div>';
   h+='<p class="detail-note">CORNER-BY-CORNER LABELS UNAVAILABLE · NO VERIFIED TRACK CORNER MAP IS LOADED.</p>';
   h+=loss&&loss.deltaMs>0?'<p class="engineer-note">CALCULATED TIME LOSS: MINI-SECTOR '+String(loss.index).padStart(2,"0")+' · '+signedMs(loss.deltaMs)+' VS SELECTED REFERENCE. REVIEW THE SAMPLED SPEED / BRAKE / THROTTLE TRACE IN THIS SECTION.</p>':'<p class="engineer-note">NO MEASURED MINI-SECTOR TIME LOSS AVAILABLE. ENGINEER ADVICE REQUIRES A VALID SAVED REFERENCE LAP; NO GENERAL SPEED OR TYRE THRESHOLD IS ASSUMED.</p>';
  }
