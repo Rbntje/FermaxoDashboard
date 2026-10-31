@@ -30,7 +30,7 @@ def udp_loop(host,port):
                     data.clear()
                     zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0
                 data.update({k:v for k,v in packet.items() if k not in ("format","packetVersion","packetId","marshalZones")})
-                data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6)
+                data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6,sourcePacketId=packet["packetId"])
                 if "marshalZones" in packet:
                     zones=packet["marshalZones"];track_length=packet.get("trackLength",0)
                 if "lapDistance" in packet and zones and track_length>0:
@@ -78,6 +78,7 @@ def handler(ws):
                 data=latest["data"].copy() if latest["received"] else None
             # Do not send an empty packet on browser connect: wait for real UDP.
             if data is not None and "speed" in data and rev!=last:
+                data["sessionUID"]=str(data.get("sessionUID",""))
                 ws.send(json.dumps({"type":"telemetry","data":data}));last=rev
             time.sleep(.03)
     except Exception: pass
@@ -89,7 +90,9 @@ class Health(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/health","/health/"):
             with lock:
-                body=json.dumps({"service":"fermaxo-udp-bridge","validPackets":latest["received"],"invalidPackets":latest["invalid"],"hasTelemetry":bool(latest["data"])}).encode()
+                received_at=latest["data"].get("receivedAt")
+                age=max(0,time.time()-received_at) if received_at else None
+                body=json.dumps({"service":"fermaxo-udp-bridge","validPackets":latest["received"],"invalidPackets":latest["invalid"],"hasTelemetry":"speed" in latest["data"],"lastPacketAge":age,**bridge_config}).encode()
             self.send_response(200);self.send_header("Content-Type","application/json");self.end_headers();self.wfile.write(body)
             return
         return super().do_GET()
@@ -104,6 +107,7 @@ def main():
     p.add_argument("--http-host",default="0.0.0.0",help="bind dashboard web server for phone access")
     p.add_argument("--http-port",type=int,default=20780)
     a=p.parse_args()
+    bridge_config.update(udpHost=a.udp_host,udpPort=a.udp_port,wsPort=a.ws_port,httpPort=a.http_port,format=2026)
     threading.Thread(target=udp_loop,args=(a.udp_host,a.udp_port),daemon=True).start()
     http=ThreadingHTTPServer((a.http_host,a.http_port),Health)
     threading.Thread(target=http.serve_forever,daemon=True).start()
