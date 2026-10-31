@@ -115,7 +115,11 @@ def main():
     try:
         addresses=socket.gethostbyname_ex(socket.gethostname())[2]
         lan=next((ip for ip in addresses if ip.startswith(("192.168.","10.")) or any(ip.startswith("172.%d."%n) for n in range(16,32))),None)
-        if lan: print("Dashboard on phone: http://%s:%s/"%(lan,a.http_port),flush=True)
+        if lan:
+            bridge_config["phoneUrl"]="http://%s:%s/"%(lan,a.http_port)
+            print("Dashboard on phone: "+bridge_config["phoneUrl"],flush=True)
+        else:
+            bridge_config["phoneUrl"]="http://127.0.0.1:%s/"%a.http_port
     except OSError: pass
     print("WebSocket bridge: ws://<this-PC-address>:%s"%a.ws_port,flush=True)
     try:
