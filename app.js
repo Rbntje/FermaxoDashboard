@@ -27,7 +27,7 @@ function flagInfo(d){
 function eventFor(d){
  const f=flagInfo(d);if(f)return {tone:f.tone,title:f.title,detail:"RACE CONTROL · LIVE GAME DATA"};
  if(d.safetyCar==="VSC")return {tone:"vsc",title:"VIRTUAL SAFETY CAR",detail:"GAME DELTA "+signedSeconds(d.scDelta)+" · FOLLOW IN-GAME TARGET"};
- if(d.safetyCar==="SAFETY CAR")return {tone:"safety",title:"SAFETY CAR",detail:"GAME DELTA "+signedSeconds(d.scDelta)+" · LIVE POSITION "+num(d.position)};
+ if(d.safetyCar==="SAFETY CAR")return {tone:"safety",title:"SAFETY CAR",detail:"GAME DELTA "+signedSeconds(d.scDelta)+" · GAP AHEAD "+signedMs(d.gapToCarAheadMs)};
  if(d.safetyCar==="FORMATION LAP")return {tone:"yellow",title:"FORMATION LAP",detail:"RACE CONTROL"};
  return null
 }
@@ -70,6 +70,8 @@ function renderDetail(page,d){
  if(page==="ers"){
    h+='<div class="detail-grid">'+row("BATTERY",d?num(d.ersPercent,1,"%"):"--")+row("ENERGY STORE",d?num(d.energyKj,1," kJ"):"--")+row("DEPLOYED THIS LAP",d?num(d.energyUsedLapKj,1," kJ"):"--")+row("HARVESTED THIS LAP",d?num(d.energyHarvestedLapKj,1," kJ"):"--")+row("DEPLOYMENT MODE",d?modeName(d.ersMode):"--")+row("OVERTAKE MODE",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--")+row("ACTIVE AERO",d?aeroName(d):"--")+'</div>';
  }
+   const samples=state.frames.slice(-18).map(f=>Number((f.data||f).ersPercent)).filter(v=>Number.isFinite(v));
+   h+='<section class="energy-trace"><b>RECORDED BATTERY TRACE</b><div>'+samples.map(v=>'<i title="'+v.toFixed(1)+'%" style="height:'+Math.max(2,Math.min(100,v))+'%"></i>').join("")+'</div><small>'+(samples.length?samples.length+" RECORDED SAMPLES":"NO RECORDED SAMPLES · START REC IN TIMING")+'</small></section>';
  if(page==="timing"){
    const history=d&&Array.isArray(d.lapHistory)?d.lapHistory:[];
    h+='<div class="detail-tools"><button id="recordButton">'+(state.recording?"STOP REC":"REC")+'</button><button id="saveButton">SAVE</button><button id="loadButton">LOAD</button><span>'+state.frames.length+' RECORDED SAMPLES</span></div>';
@@ -86,7 +88,7 @@ function renderDetail(page,d){
    h+='<div class="detail-grid">'+row("SPEED",d?num(d.speed,0," km/h"):"--")+row("ENGINE RPM",d?num(d.rpm):"--")+row("GEAR",d?num(d.gear):"--")+row("THROTTLE",d?num(d.throttle*100,0,"%"):"--")+row("BRAKE",d?num(d.brake*100,0,"%"):"--")+row("STEERING",d?num(d.steer*100,0,"%"):"--")+row("BRAKE TEMPS",d&&d.brakeTempC?d.brakeTempC.map(x=>num(x)+"°").join(" / "):"--")+row("ENGINE TEMP",d?num(d.engineTempC,0," °C"):"--")+row("AERO MODE",d?aeroName(d):"--")+row("DRS",d&&d.drs!=null?(d.drs?"OPEN":"CLOSED"):"--")+'</div><p class="detail-note">LIVE VALUES COME FROM THE GAME UDP PACKET · RECORDED SAMPLES: '+state.frames.length+'</p>';
  }
  if(page==="race"){
-   h+='<div class="detail-grid">'+row("SESSION",d?sessions[d.sessionType]||"SESSION":"--")+row("POSITION",d?num(d.position):"--")+row("LAP",d?num(d.lap)+" / "+num(d.totalLaps):"--")+row("GAP AHEAD",d?signedMs(d.gapToCarAheadMs):"--")+row("GAP TO LEADER",d?signedMs(d.gapToLeaderMs):"--")+row("SAFETY CAR DELTA",d?signedSeconds(d.scDelta):"--")+row("RACE CONTROL",d?d.safetyCar||"CLEAR":"--")+row("PIT STATUS",d?({0:"NOT IN PIT",1:"PITTING",2:"PIT LANE"})[d.pitStatus]||"--":"--")+row("PIT STOPS",d?num(d.numPitStops):"--")+row("PENALTY TIME",d?num(d.penalties,0," s"):"--")+row("WARNINGS",d?num(d.totalWarnings):"--")+row("FUEL",d?num(d.fuelKg,1," kg"):"--")+row("FUEL REMAINING",d?num(d.fuelRemainingLaps,1," laps"):"--")+'</div>';
+   h+='<div class="detail-grid">'+row("SESSION",d?sessions[d.sessionType]||"SESSION":"--")+row("POSITION",d?num(d.position):"--")+row("LAP",d?num(d.lap)+" / "+num(d.totalLaps):"--")+row("GAP AHEAD",d?signedMs(d.gapToCarAheadMs):"--")+row("GAP TO LEADER",d?signedMs(d.gapToLeaderMs):"--")+row("SAFETY CAR DELTA",d?signedSeconds(d.scDelta):"--")+row("RACE CONTROL",d?d.safetyCar||"CLEAR":"--")+row("PIT STATUS",d?({0:"NOT IN PIT",1:"PITTING",2:"PIT LANE"})[d.pitStatus]||"--":"--")+row("PIT STOPS",d?num(d.numPitStops):"--")+row("PENALTY TIME",d?num(d.penalties,0," s"):"--")+row("DRIVE-THROUGH PENALTIES",d?num(d.unservedDriveThrough):"--")+row("STOP-GO PENALTIES",d?num(d.unservedStopGo):"--")+row("WARNINGS",d?num(d.totalWarnings):"--")+row("FUEL",d?num(d.fuelKg,1," kg"):"--")+row("FUEL REMAINING",d?num(d.fuelRemainingLaps,1," laps"):"--")+'</div>';
  }
  if(page==="engineer"){
    h+='<div class="detail-grid">'+row("DRIVER STATUS",d?driverStates[d.driverStatus]||"--":"--")+row("LAP INVALID",d&&d.currentLapInvalid!=null?(d.currentLapInvalid?"YES":"NO"):"--")+row("CORNER CUT WARNINGS",d?num(d.cornerCuttingWarnings):"--")+row("ERS MODE",d?modeName(d.ersMode):"--")+row("AERO MODE",d?aeroName(d):"--")+row("OVERTAKE",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--")+'</div><p class="engineer-note">DRIVER ADVICE UNAVAILABLE · THIS BUILD HAS NO VALIDATED CORNER REFERENCE OR TELEMETRY COMPARISON FOR COACHING.</p>';
