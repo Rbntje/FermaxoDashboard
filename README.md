@@ -56,4 +56,4 @@ Some requested details are not available in the current decode: mini-sectors, co
 
 ## Verification
 
-The JavaScript syntax and HTML element references were checked after the redesign. No live game packet capture or phone-browser preview was available in this environment, so verify the connection and final fit on the target phone before driving.
+JavaScript syntax and HTML element references were checked. The bridge Python file compiled, and its parser accepted size-valid packet fixtures for the decoded 2026 packet types. The actual WebSocket server was not launched here because the environment does not have the `websockets` dependency installed (the Windows launcher installs it). No live game packet capture or phone-browser preview was available, so verify the connection and final fit on the target phone before driving.
