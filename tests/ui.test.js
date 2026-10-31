@@ -11,9 +11,11 @@ test("only MAIN and ENGINEER are primary navigation pages",()=>{
 });
 test("MAIN markup permanently contains essential driving and ERS readings",()=>{
  const main=html.slice(html.indexOf('id="homePage"'),html.indexOf('id="detailPage"'));
- for(const id of ["gearValue","speedValue","rpmLeds","throttleValue","brakeValue","steerValue","steerBar","fuelValue","fuelRange","ersPercent","ersFill","energyStore","energyDeploy","energyHarvest","lapValue","lapTime","lastLapValue","bestLapValue","deltaValue","s1Value","s2Value","s3Value","positionValue","safetyValue","flagValue","trackMapHost","tyreFL","tyreFR","tyreRL","tyreRR","tyreCondition","tyreCompound","tyreWearAverage"])
+ for(const id of ["gearValue","speedValue","rpmLeds","throttleValue","brakeValue","steerValue","steerBar","fuelValue","fuelRange","ersPercent","ersFill","energyStore","energyDeploy","energyHarvest","lapValue","lapTime","lastLapValue","bestLapValue","deltaValue","s1Value","s2Value","s3Value","positionValue","safetyValue","flagValue","trackMapHost","tyreFL","tyreFR","tyreRL","tyreRR","tyreCondition","tyreCompound","tyreWearAverage","tyreFLBrake","tyreFRBrake","tyreRLBrake","tyreRRBrake","wheelFL","wheelFR","wheelRL","wheelRR"])
   assert.match(main,new RegExp('id="'+id+'"'),id);
  assert.doesNotMatch(main,/miniStrip|mini-cell/);
+ assert.match(main,/class="car-silhouette"/);
+ assert.match(main,/id="wheelFL"/);
 });
 test("ENGINEER is lap analysis only and MAIN stays a no-scroll screen",()=>{
  assert.ok(app.includes('if(page==="engineer"){'));
