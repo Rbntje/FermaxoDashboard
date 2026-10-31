@@ -60,3 +60,22 @@
 @media(max-height:430px) and (orientation:landscape){
  .topline{height:24px;min-height:24px}.header-button{height:22px;min-width:48px}.standby-line{height:10px;min-height:10px;font-size:6px}.rpm-row{height:14px;min-height:14px}.rpm-leds i{height:5px}.main-grid{grid-template-columns:.85fr 1.05fr 1.2fr}.speed-value{font-size:40px}.gear-value{font-size:95px}.center-timing{min-height:32px}.center-timing b{font-size:14px}.box-head{height:17px;min-height:17px}.ers-content{padding:3px}.battery-shell{min-height:45px}.ers-readouts{gap:2px}.ers-readouts>div{padding:2px 3px}.ers-readouts span{font-size:5px}.ers-readouts b{font-size:12px}.ers-readouts .ers-store b{font-size:18px}.ers-status-row{height:13px;min-height:13px}.timing-grid{height:36px;min-height:36px}.timing-cell span{font-size:5px}.timing-cell b{font-size:10px}.engineer-line{height:10px;min-height:10px}.page-nav{height:33px;min-height:33px}.page-button{min-height:30px;font-size:7px}.bottomline{height:9px;min-height:9px}
 }
+/* Session layouts keep every essential value visible while changing emphasis. */
+body[data-session="qualifying"] .center-timing{grid-template-columns:1fr 1.1fr;min-height:58px}
+body[data-session="qualifying"] .delta-box{background:#231a36}
+body[data-session="qualifying"] .delta-box b{font-size:clamp(18px,3.2vw,30px);color:#d6c3ff}
+body[data-session="qualifying"] .timing-grid{height:65px;min-height:65px;grid-template-columns:.9fr 1fr 1fr 1fr 1fr 1fr .7fr .7fr .7fr}
+body[data-session="qualifying"] .sector b{font-size:clamp(15px,2vw,23px)}
+body[data-session="race"] #topPosition{color:var(--yellow);font-size:15px}
+body[data-session="race"] .race-cell{background:#312609;border-color:#80610b}
+body[data-session="race"] .lap-best,body[data-session="race"] .sector{opacity:.82}
+body[data-session="practice"] .lap-last,body[data-session="practice"] .lap-best{background:#17251f}
+body[data-session="timeTrial"] .delta-box{background:#211932}
+@media(orientation:landscape) and (max-height:520px){
+ body[data-session="qualifying"] .timing-grid{height:45px;min-height:45px}
+ body[data-session="qualifying"] .center-timing{min-height:42px}
+}
+@media(orientation:portrait){
+ body[data-session="qualifying"] .timing-grid{height:72px;min-height:72px}
+ body[data-session="race"] #topPosition{font-size:12px}
+}
