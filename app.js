@@ -29,6 +29,7 @@ function currentTrack(d){return d&&d.trackId!=null?String(d.trackId):""}
 function saveLaps(){try{localStorage.setItem("fermaxoSavedLaps",JSON.stringify(STATE.laps.slice(0,30)))}catch{setText("statusText","LAP STORAGE FULL · EXPORT LAPS")}}
 function chooseDefaultReference(){const track=currentTrack(STATE.data),selected=STATE.laps.find(x=>x&&x.id===STATE.referenceId&&x.valid),compatible=STATE.laps.filter(x=>x&&x.valid&&x.trackLength>0&&(track===""||String(x.trackId)===track)).sort((a,b)=>a.timeMs-b.timeMs);if(!selected||(track!==""&&String(selected.trackId)!==track))STATE.referenceId=compatible[0]?compatible[0].id:"";try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}}
 function referenceLap(){chooseDefaultReference();return STATE.laps.find(x=>x.id===STATE.referenceId&&x.valid)||null}
+function personalBest(){const track=currentTrack(STATE.data);return STATE.laps.filter(x=>x&&x.valid&&x.timeMs>0&&(track===""||String(x.trackId)===track)).sort((a,b)=>a.timeMs-b.timeMs)[0]||null}
 function captureLapSample(d,persist=true){
  const uid=d.sessionUID==null?"":String(d.sessionUID),track=currentTrack(d),lap=Number(d.lap);
  if(STATE.captureUID!==uid||STATE.captureTrack!==track){STATE.captureUID=uid;STATE.captureTrack=track;STATE.currentLap=lap;STATE.currentLapSamples=[];STATE.currentLapIncomplete=false}
@@ -89,7 +90,7 @@ function render(){
  setText("standbyLine",d?"":STATE.status==="stale"||STATE.status==="disconnected"||STATE.status==="unsupported"?"TELEMETRY UNAVAILABLE · CHECK LINK":"STANDBY · WAITING FOR SESSION");$("standbyLine").classList.toggle("hidden",!!d);
  setText("speedValue",d?num(d.speed):"--");setText("gearValue",d?Number(d.gear)===0?"N":Number(d.gear)<0?"R":num(d.gear):"N");
  setText("lapTime",d?lapTime(d.currentLapMs):"--:--.---");setText("deltaValue",d?signedMs(d.deltaMs):"--");setText("deltaLabel",kind==="qualifying"?"DELTA TO SESSION BEST":"DELTA");
- setText("lastLapValue",d?lapTime(d.lastLapMs):"--:--.---");setText("bestLapValue",d?lapTime(d.bestLapMs):"--:--.---");
+ setText("lastLapValue",d?lapTime(d.lastLapMs):"--:--.---");const pb=personalBest(),bestLabel=document.querySelector(".lap-best span");setText("bestLapValue",pb?lapTime(pb.timeMs):d?lapTime(d.bestLapMs):"--:--.---");if(bestLabel)bestLabel.textContent=pb?"PERSONAL BEST":"SESSION BEST";
  setText("s1Value",d?lapTime(d.s1Ms):"--:--.---");setText("s2Value",d?lapTime(d.s2Ms):"--:--.---");setText("s3Value",d?lapTime(d.s3Ms):"--:--.---");
  setText("ersPercent",d?num(d.ersPercent,0,"%"):"--");setText("energyStore",d?num(d.energyKj,0):"--");setText("energyDeploy",d?num(d.energyUsedLapKj,0):"--");setText("energyHarvest",d?num(d.energyHarvestedLapKj,0):"--");
  const fill=$("ersFill");if(fill)fill.style.height=d&&Number.isFinite(Number(d.ersPercent))?Math.max(0,Math.min(100,Number(d.ersPercent)))+"%":"0%";
