@@ -56,6 +56,16 @@ def udp_loop(host,port):
                     zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0
                 data.update({k:v for k,v in packet.items() if k not in ("format","packetVersion","packetId","marshalZones")})
                 data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6,sourcePacketId=packet["packetId"])
+                if packet["packetId"] == 0:
+                    data["motionFrameIdentifier"] = packet["frameIdentifier"]
+                    data["trackPointValid"] = False
+                elif packet["packetId"] == 2:
+                    data["lapFrameIdentifier"] = packet["frameIdentifier"]
+                    data["trackPointValid"] = (
+                        data.get("motionFrameIdentifier") == packet["frameIdentifier"]
+                        and data.get("worldX") is not None
+                        and data.get("worldZ") is not None
+                    )
                 if "marshalZones" in packet:
                     zones=packet["marshalZones"];track_length=packet.get("trackLength",0)
                 if "lapDistance" in packet and zones and track_length>0:
