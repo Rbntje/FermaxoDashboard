@@ -7,14 +7,6 @@ SIZES = {
     2025: {0:1349,1:753,2:1285,3:45,4:1284,5:1133,6:1352,7:1239,8:1042,9:954,10:1041,11:1460,12:231,13:273,14:101,15:1131},
     2026: {0:1325,1:926,2:1399,3:45,4:1470,5:1233,6:1448,7:1445,8:1134,9:1062,10:1133,11:1460,12:231,13:273,14:104,15:1231,16:269},
 }
-lock = threading.Lock()
-stop = threading.Event()
-latest = {"revision":0,"received":0,"invalid":0,"data":{}}
-zones = []
-track_length = 0
-red_flag = False
-event_flag = None
-event_flag_until = 0
 
 def parse_packet(buf):
     if len(buf) < HEADER:
