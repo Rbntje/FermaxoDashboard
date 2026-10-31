@@ -1,18 +1,18 @@
-# FERMAXO RACING — Race Engineering Dashboard
+# FERMAXO RACING — Virtual Wheel Display
 
-A GitHub Pages friendly telemetry dashboard and local F1 UDP → WebSocket bridge.
+A full-screen steering wheel-inspired telemetry interface for F1 25 and its 2026 Season Pack, paired with a local UDP → WebSocket bridge.
 
-## Features
+## Wheel controls
 
-- Race workstation interface with speed, gear, RPM, throttle, brake and DRS.
-- Prominent flag and safety-car alert area.
-- ERS display and charge history when data is supplied.
-- Lap table and two-lap comparison for captured data.
-- Local recording, JSON/CSV export, replay import, and labelled demo mode.
-- Python bridge validates F1 25 (2025) and F1 25: 2026 Season Pack packet headers and exact packet lengths. It decodes the player's Car Telemetry packet: speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, pressures and engine temperature.
-- Undecoded fields remain unavailable. Demo values are clearly labelled and are not game telemetry.
+- **DRIVE / ENERGY / TIMING / ENGINEER** buttons switch the central LCD page. The rotary-style **MODE** control advances pages; left/right arrow keys do the same.
+- **LINK** connects to the bridge at `ws://localhost:20778`; **RECONNECT** retries the connection.
+- **DEMO** is manual and clearly labelled. It is never enabled automatically.
+- **REC / SAVE / LOAD** record incoming frames in browser memory, export JSON, and replay a saved JSON file.
+- **VIEW** or the F key toggles browser fullscreen.
 
-## Run the bridge locally
+With no received game telemetry the LCD says **WAITING FOR F1 TELEMETRY**. If received packets go stale, it says **TELEMETRY CONNECTION LOST**. Missing fields display as `--` or `UNAVAILABLE`. The RPM strip responds to received RPM. Flag and Safety Car alerts appear only if those fields arrive from a source.
+
+## Telemetry bridge
 
 Requires Python 3.10+.
 
@@ -22,29 +22,27 @@ py -m pip install -r requirements.txt
 py bridge.py
 ```
 
-Open `index.html` and click **CONNECT LIVE** (default `ws://localhost:20778`). In F1 25, enable UDP telemetry in **Settings → Telemetry**, choose UDP format **2026** for the 2026 Season Pack or **2025** for base F1 25, set port **20777**, and choose the PC running the bridge as destination.
+In F1 25 enable UDP telemetry under **Settings → Telemetry**, select UDP format **2026** for the 2026 Season Pack, set port **20777**, and set the destination IP to the gaming PC. Base F1 25's **2025** format is also accepted by the bridge. Open `index.html` and press **LINK**.
 
-The bridge binds its UDP, WebSocket and health endpoints to loopback by default. To receive UDP from a console, bind UDP to the gaming PC's private LAN address, for example:
+The bridge binds UDP, WebSocket and health endpoints to loopback by default. To receive a console's UDP stream, bind UDP to the gaming PC's private LAN address, for example:
 
 ```powershell
 py bridge.py --udp-host 192.168.1.20
 ```
 
-The browser can still connect locally to `ws://localhost:20778`. If a browser on another LAN device needs access, bind `--ws-host` to the specific private interface address and use `ws://<gaming-pc-ip>:20778`. Expose only the private interface needed for your setup. The health endpoint is `http://localhost:20779/`.
+For a browser on another LAN device, bind `--ws-host` to the specific private interface and connect to `ws://<gaming-pc-ip>:20778`. The health endpoint is `http://localhost:20779/`.
 
 ## GitHub Pages
 
-Enable Pages for the `main` branch and root folder. GitHub Pages serves the static dashboard but cannot receive UDP. A hosted HTTPS page cannot connect to an insecure `ws://` endpoint; remote Pages use requires a properly configured secure `wss://` endpoint. For race day, running the local page and bridge on the same PC is the straightforward option.
+Enable Pages for the `main` branch and root folder. GitHub Pages serves the static interface but cannot receive UDP. An HTTPS Pages site cannot connect to an insecure `ws://` bridge; remote use needs a properly configured `wss://` endpoint. Running the local page beside the bridge is the straightforward option.
 
-## Recording
+## Current protocol scope
 
-Start recording to capture received frames in browser memory. Export JSON to retain a session or CSV for available per-frame fields. Load a JSON export to replay. Demo recordings remain demo data.
+The bridge validates the packet format and exact packet length for supported F1 25 and 2026 packet IDs. It currently decodes only Car Telemetry: speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, tyre pressures and engine temperature. The LCD is laid out for additional packet fields, but the bridge does **not** yet decode lap timing, ERS energy, FIA flags, marshal zones, Safety Car/VSC state or delta, tyre wear, session information, or leaderboard. Those fields therefore remain unavailable in live mode. Recommendations and corner speed plans are not generated without supporting telemetry.
 
-## Protocol scope and known limitations
-
-EA's 2026 Season Pack uses a different UDP format from base F1 25; the packet format, packet ID and exact packet length are checked for every incoming datagram. This initial release decodes only Car Telemetry. While the browser supports the visual areas for strategy, flags, lap analysis and race control, it does **not** yet decode the packets required for accurate session/lap timing, ERS charge/deployment, FIA flags/marshal zones, safety car/VSC state and authoritative delta, tyre wear, track map, or multiplayer leaderboard. Those fields are deliberately not presented as live values. VSC speed plans and corner coaching are not inferred from a schematic.
+The redesign has been checked for JavaScript syntax and that every referenced interface element exists in `index.html`. It has not yet been run against a live F1 UDP session or visually verified in a browser.
 
 ## References
 
 - [EA SPORTS F1 25 / 2026 Season Pack UDP specification](https://forums.ea.com/blog/f1-games-game-info-hub-en/ea-sports%E2%84%A2-f1%C2%AE25-2026-season-pack-udp-specification/12187347)
-- [F1 telemetry packet size and format notes](https://github.com/rdgonzaga/f1-game-telemetry/blob/main/docs/udp-spec.md)
+- [Packet size and format notes](https://github.com/rdgonzaga/f1-game-telemetry/blob/main/docs/udp-spec.md)
