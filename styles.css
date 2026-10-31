@@ -149,3 +149,57 @@ body[data-session="timeTrial"] .delta-box{background:#211932}
  .page-nav{height:46px;min-height:46px}
  .page-button{min-height:42px}
 }
+
+
+
+/* Live geometry track map and four-corner tyre readouts */
+.main-grid{grid-template-columns:.85fr 1fr 1.18fr 1.12fr}
+.car-box{display:flex;flex-direction:column;border-top-color:var(--red);min-height:0}
+.car-tyre-layout{position:relative;flex:1;min-height:58px;margin:2px}
+.car-silhouette{position:absolute;left:50%;top:50%;height:96%;max-width:42%;transform:translate(-50%,-50%);opacity:.9}
+.main-tyre-tile{position:absolute;width:40%;height:46%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;background:#10171b;border:1px solid #334047;border-left:2px solid #77868b;line-height:1}
+.main-tyre-tile b{font-size:7px;color:var(--muted)}
+.main-tyre-tile span{font:900 clamp(10px,1.45vw,16px)/1 var(--display);color:var(--white)}
+.main-tyre-tile small,.main-tyre-tile i{font-style:normal;font-size:6px;color:#aab7bb}
+.main-tyre-tile.cold{border-color:var(--blue)}.main-tyre-tile.cold span{color:var(--blue)}
+.main-tyre-tile.normal{border-color:var(--green)}.main-tyre-tile.normal span{color:var(--green)}
+.main-tyre-tile.hot,.main-tyre-tile.worn{border-color:var(--red)}.main-tyre-tile.hot span,.main-tyre-tile.worn small{color:var(--red)}
+.main-tyre-tile.wear-warning{border-color:var(--yellow)}
+.tyre-fl{left:0;top:0}.tyre-fr{right:0;top:0}.tyre-rl{left:0;bottom:0}.tyre-rr{right:0;bottom:0}
+.tyre-meta{min-height:15px;display:flex;align-items:center;justify-content:space-between;gap:3px;padding:0 4px;background:#141d22}
+.tyre-meta>b{color:var(--cyan);font-size:7px}.tyre-meta span{color:var(--muted);font-size:5px;white-space:nowrap}.tyre-meta strong{color:#fff;font-size:7px}
+.track-map-panel{height:70px;min-height:64px;display:flex;flex-direction:column;gap:2px;padding:2px 5px;background:#080c0f;border:1px solid #2b373e;border-left:3px solid var(--cyan)}
+.track-map-title{height:10px;min-height:10px;display:flex;justify-content:space-between;align-items:center;color:var(--cyan);font-size:7px;letter-spacing:.08em}
+.track-map-title span{color:var(--muted)}
+.track-map-host{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:manipulation}
+.track-map-svg{width:100%;height:100%;overflow:visible}
+.track-base{fill:none;stroke:#29363c;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+.track-mini-hit{fill:none;stroke:transparent;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;pointer-events:stroke;cursor:pointer}
+.track-mini{fill:none;stroke:#66747a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.track-mini.gain{stroke:var(--green)}.track-mini.loss{stroke:var(--red)}.track-mini.neutral{stroke:#66747a}.track-mini.active{stroke:var(--cyan);stroke-width:6}
+.track-mini.selected{filter:drop-shadow(0 0 3px #fff);stroke-width:7}
+.track-sector-mark{stroke:#fff;stroke-width:1.6;stroke-dasharray:2 2;opacity:.85}
+.track-sector-label{fill:#fff;font:700 8px var(--mono);paint-order:stroke;stroke:#080c0f;stroke-width:2px}
+.track-start{fill:#fff;stroke:#080c0f;stroke-width:2}
+.track-driver{fill:#fff;stroke:var(--red);stroke-width:2;filter:drop-shadow(0 0 4px #fff)}
+.track-direction{fill:var(--red);stroke:#fff;stroke-width:1}
+.track-map-readout{position:absolute;left:-9999px}
+.track-map-empty{color:#86949a;font-size:8px;letter-spacing:.08em;text-align:center}
+.engineer-map-wrap{flex:0 0 auto;min-height:230px;display:flex;flex-direction:column;gap:4px;padding:6px;background:#080c0f;border:1px solid var(--line)}
+.engineer-map-wrap>strong{color:var(--cyan);font-size:10px;letter-spacing:.1em}
+.engineer-map-wrap .track-map-host{min-height:170px}
+.engineer-map-wrap .track-map-readout{position:static;left:auto;min-height:18px;color:#e7eef0;font-size:10px}
+@media(orientation:landscape) and (max-height:520px){
+ .main-grid{grid-template-columns:.82fr .95fr 1.1fr 1.12fr;min-height:84px}
+ .car-tyre-layout{min-height:48px}.main-tyre-tile small,.main-tyre-tile i{font-size:5px}
+ .track-map-panel{height:58px;min-height:54px}
+ .track-map-title{height:8px;min-height:8px;font-size:6px}
+}
+@media(orientation:portrait){
+ .main-grid{grid-template-columns:1fr 1fr;grid-template-rows:1fr .8fr .8fr}
+ .speed-box{grid-column:1;grid-row:1}.center-box{grid-column:2;grid-row:1}
+ .ers-box{grid-column:1/-1;grid-row:2}.car-box{grid-column:1/-1;grid-row:3}
+ .car-tyre-layout{min-height:55px}.car-silhouette{height:98%;max-width:50%}
+ .track-map-panel{height:62px;min-height:58px}
+ .engineer-map-wrap .track-map-host{min-height:150px}
+}
