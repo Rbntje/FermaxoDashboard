@@ -13,6 +13,15 @@ def make_packet(packet_id):
     return data
 
 class ProtocolTests(unittest.TestCase):
+    def test_motion_world_position(self):
+        data = make_packet(0)
+        o = HEADER
+        struct.pack_into("<fff", data, o, 123.5, 8.0, -456.25)
+        result = parse_packet(data)
+        self.assertEqual(result["worldX"], 123.5)
+        self.assertEqual(result["worldY"], 8.0)
+        self.assertEqual(result["worldZ"], -456.25)
+
     def test_player_telemetry_fields(self):
         data = make_packet(6)
         o = HEADER
