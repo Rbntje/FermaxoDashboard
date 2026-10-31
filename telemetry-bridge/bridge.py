@@ -71,6 +71,7 @@ def parse_packet(buf):
           scDelta=struct.unpack_from("<f",buf,o+28)[0],
           position=buf[o+32],lap=buf[o+33],sector=buf[o+36],
           penalties=buf[o+38])
+        out["s3Ms"]=max(0,out["currentLapMs"]-s1-s2) if out["sector"]==2 else None
     elif pid == 3:
         code=buf[29:33].decode("ascii","replace")
         out["eventCode"]=code
@@ -82,6 +83,17 @@ def parse_packet(buf):
             if event_type==3: out["flag"]="green"
         elif code=="RDFL": out["flag"]="red"
         elif code=="CHQF": out["flag"]="chequered"
+    elif pid == 11:
+        # Session history packets rotate across cars; decode only player's lap records.
+        if buf[29] == player:
+            count=min(buf[30],100)
+            best=[]
+            for i in range(count):
+                o=36+i*14
+                lap_ms=struct.unpack_from("<I",buf,o)[0]
+                valid=buf[o+13]
+                if lap_ms>0 and valid&1: best.append(lap_ms)
+            if best: out["bestLapMs"]=min(best)
     elif pid == 7:
         if player >= cars: raise ValueError("invalid player index")
         slot=59 if fmt==2026 else 55
@@ -149,6 +161,8 @@ def udp_loop(host,port):
                         if data.get("flag")==event_flag:data["flag"]=None
                         event_flag=None
                 if code=="CHQF":data["flag"]="chequered"
+                if data.get("currentLapMs") is not None and data.get("bestLapMs"):
+                    data["deltaMs"]=data["currentLapMs"]-data["bestLapMs"]
                 data["receivedAt"]=time.time()
                 latest["received"]+=1;latest["revision"]+=1
         except (ValueError,struct.error,IndexError) as exc:
