@@ -20,11 +20,21 @@
 </header>
 
 <section id="settingsPanel" class="settings-panel hidden" aria-label="Connection settings">
-  <label for="bridgeUrl">BRIDGE ADDRESS</label>
+  <label for="bridgeUrl">LOCAL TELEMETRY BRIDGE</label>
   <input id="bridgeUrl" value="ws://localhost:20778" spellcheck="false" autocomplete="url">
   <button id="saveSettingsButton">SAVE & CONNECT</button>
+  <label class="mini-setting" for="miniSectorCount">MINI-SECTORS</label>
+  <select id="miniSectorCount"><option>8</option><option selected>12</option><option>16</option><option>24</option></select>
+  <div class="bridge-diagnostics">
+    <span>UDP <b id="udpListenInfo">--</b></span>
+    <span>FORMAT <b id="formatInfo">--</b></span>
+    <span>PACKETS <b id="bridgePacketInfo">--</b></span>
+    <span>INVALID <b id="invalidPacketInfo">--</b></span>
+    <span>PHONE URL <b id="phoneUrlValue">--</b></span>
+  </div>
+  <button id="copyPhoneUrl">COPY PHONE URL</button>
   <button id="fullscreenButton">FULLSCREEN</button>
-  <span id="settingsHelp">Phone and PC must use the same local network.</span>
+  <span id="settingsHelp">Connect phone and PC to the same local network.</span>
 </section>
 
 <div id="eventBanner" class="event-banner hidden" role="alert">
@@ -87,6 +97,10 @@
     <div class="timing-cell race-cell"><span>RACE CONTROL</span><b id="safetyValue">--</b></div>
     <div class="timing-cell flag-cell"><span>FLAG</span><b id="flagValue">--</b></div>
   </div>
+  <div class="mini-sector-panel">
+    <div class="mini-sector-title"><b id="miniSectorTitle">MINI-SECTOR DELTA</b><span id="miniReferenceTitle">REFERENCE --</span></div>
+    <div id="miniStrip" class="mini-strip"><span class="mini-empty">NO VALID RECORDED COMPARISON</span></div>
+  </div>
   <div class="engineer-line"><span>PENALTIES</span><b id="penaltyValue">--</b><span>STATUS</span><b id="driverStatusValue">--</b></div>
 </section>
 
@@ -104,6 +118,7 @@
 <footer class="bottomline"><span id="packetInfo">0 PACKETS</span><span id="sourceInfo">F1 UDP · 2026</span><span id="ageInfo">--</span></footer>
 <input id="loadFile" type="file" accept=".json,application/json" hidden>
 </main>
+<script src="minisectors.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
