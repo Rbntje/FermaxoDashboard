@@ -224,8 +224,9 @@ async function pollHealth(){
  try{if(location.protocol!=="http:"&&location.protocol!=="https:")return;const response=await fetch("/health",{cache:"no-store"});if(!response.ok)throw Error("health");const h=await response.json();
   setText("udpListenInfo",String(h.udpHost||"--")+":"+String(h.udpPort||"--"));setText("formatInfo",h.format?"F1 "+h.format:"--");
   setText("bridgePacketInfo",num(h.validPackets));setText("invalidPacketInfo",num(h.invalidPackets));
+  setText("udpState",h.udpError?"ERROR · "+h.udpError:!h.udpReady?"STARTING":h.lastPacketAge==null?"LISTENING · NO PACKETS":h.lastPacketAge>2.5?"NO RECENT PACKETS":"RECEIVING");
   const phone=h.phoneUrl||location.origin+"/";setText("phoneUrlValue",phone)
- }catch{setText("udpListenInfo","BRIDGE UNAVAILABLE");setText("formatInfo","--");setText("bridgePacketInfo","--");setText("invalidPacketInfo","--")}
+ }catch{setText("udpListenInfo","BRIDGE UNAVAILABLE");setText("udpState","BRIDGE OFFLINE");setText("formatInfo","--");setText("bridgePacketInfo","--");setText("invalidPacketInfo","--")}
 }
 function go(page){if(!PAGES.includes(page))return;STATE.page=page;detailPage="";render()}
 document.querySelectorAll(".page-button").forEach(b=>b.onclick=()=>go(b.dataset.page));
