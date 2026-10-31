@@ -25,7 +25,19 @@ def udp_loop(host,port):
     global zones,track_length,red_flag,event_flag,event_flag_until
     sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-    sock.bind((host,port));sock.settimeout(1)
+    try:
+        sock.bind((host,port))
+        sock.settimeout(1)
+        with lock:
+            bridge_config["udpReady"]=True
+            bridge_config["udpError"]=""
+    except OSError as exc:
+        with lock:
+            bridge_config["udpReady"]=False
+            bridge_config["udpError"]=str(exc)
+        print("UDP bind failed: %s"%exc,flush=True)
+        sock.close()
+        return
     print("UDP listening on %s:%s"%(host,port),flush=True)
     while not stop.is_set():
         try: buf,_=sock.recvfrom(4096)
@@ -117,7 +129,7 @@ def main():
     p.add_argument("--http-host",default="0.0.0.0",help="bind dashboard web server for phone access")
     p.add_argument("--http-port",type=int,default=20780)
     a=p.parse_args()
-    bridge_config.update(udpHost=a.udp_host,udpPort=a.udp_port,wsPort=a.ws_port,httpPort=a.http_port,format=2026)
+    bridge_config.update(udpHost=a.udp_host,udpPort=a.udp_port,wsPort=a.ws_port,httpPort=a.http_port,format=2026,udpReady=False,udpError="")
     threading.Thread(target=udp_loop,args=(a.udp_host,a.udp_port),daemon=True).start()
     http=ThreadingHTTPServer((a.http_host,a.http_port),Health)
     threading.Thread(target=http.serve_forever,daemon=True).start()
