@@ -75,8 +75,8 @@ body[data-session="practice"] .lap-clock b{color:#f7fafb}
 .sector-line{min-height:37px;justify-content:flex-start;gap:7px;border:0}
 .sector-line>span{display:flex;align-items:center;gap:7px;padding:6px 9px;background:#111a20;border-bottom:2px solid var(--team-cyan)}
 .sector-line>span:nth-child(2){border-color:var(--team-red)}
-.sector-line>span:nth-child(3){border-color:var(--f1-purple)}
-.sector-line>span:nth-child(4){border-color:var(--f1-green)}
+.sector-line>span:nth-child(3){border-color:var(--team-red)}
+.sector-line>span:nth-child(4){border-color:var(--team-cyan)}
 .sector-line b{color:#f7fafb}
 .input-bars{border:0;gap:8px;padding:7px 0}
 .input-row{padding:8px 10px;background:#0d1419;border-left:4px solid var(--team-cyan)}
