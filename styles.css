@@ -223,3 +223,90 @@ body[data-session="race"] .track-map-panel .track-map-svg{width:84%}
 
 .fuel-cell small{color:var(--cyan);font-size:6px}
 .bar.steer{position:relative}.bar.steer:after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px solid #eaf2f4;opacity:.8}
+
+
+/* Fermaxo visual race instrument: car-first hierarchy */
+:root{--red:#ff314d;--cyan:#35e2d3;--green:#69f0a3;--box:#0d1419;--line:#283941}
+.lcd-app{background:radial-gradient(ellipse at 52% 48%,#14222a 0%,#080c10 64%);border-top:3px solid var(--red)}
+.topline{position:relative;border-bottom:1px solid #263a42;background:linear-gradient(90deg,#11191fdd,#091116cc)}
+.topline:after{content:"";position:absolute;left:0;bottom:-1px;width:26%;height:2px;background:linear-gradient(90deg,var(--red),var(--cyan))}
+.brand{font-size:14px;text-shadow:0 0 14px #35e2d355}.brand b{color:var(--cyan)}
+.session-chip{background:linear-gradient(100deg,var(--red),#a5142d);color:#fff;border-left:2px solid var(--cyan)}
+.main-grid{grid-template-columns:.76fr .78fr 1.55fr .98fr;grid-template-areas:"speed gear car ers";gap:clamp(7px,1vw,14px)}
+.speed-box{grid-area:speed}.center-box{grid-area:gear}.car-box{grid-area:car}.ers-box{grid-area:ers}
+.main-grid .info-box{border:0;border-left:1px solid #31434b;border-top:2px solid transparent;background:transparent;overflow:hidden}
+.main-grid .speed-box{border-left:2px solid var(--red);border-image:linear-gradient(180deg,var(--red),transparent 85%) 1}
+.main-grid .center-box{border-left:1px solid #35e2d377;border-image:linear-gradient(180deg,var(--cyan),transparent 85%) 1}
+.main-grid .car-box{position:relative;border-left:1px solid #35e2d366;border-image:linear-gradient(180deg,var(--cyan),var(--red) 60%,transparent) 1;background:radial-gradient(ellipse at center,#1a2a31a8,#0b1116b3 74%);box-shadow:inset 0 0 24px #35e2d30a}
+.main-grid .ers-box{border-left:1px solid #ff314d77;border-image:linear-gradient(180deg,var(--red),var(--cyan) 64%,transparent) 1;background:radial-gradient(ellipse at 70% 45%,#12333a77,#0b1116aa 76%)}
+.box-head{background:transparent;border-bottom:1px solid #30424a;color:#d9e6e9;letter-spacing:.16em}
+.red-head{background:linear-gradient(90deg,#3a111b88,transparent);color:#fff}
+.cyan-head{background:linear-gradient(90deg,#0c333888,transparent);color:#fff}
+.purple-head{height:31px;min-height:31px;background:linear-gradient(90deg,#0c3c3d,#102127 80%);color:var(--cyan)}
+.purple-head>b{color:#eafffc;text-shadow:0 0 12px #35e2d355}
+.speed-value{color:#fff;text-shadow:0 0 18px #ff314d44}
+.gear-value{color:var(--cyan);text-shadow:0 0 22px #35e2d366}
+.center-timing>div{border-top:1px solid #35e2d355}
+.car-tyre-layout{min-height:72px;margin:0;isolation:isolate}
+.car-silhouette{height:98%;width:auto;max-width:none;opacity:1;filter:drop-shadow(0 5px 9px #000b);z-index:1}
+.car-aero{filter:drop-shadow(0 0 5px #35e2d322)}
+.car-wheel{color:#93a1a6;transition:color .18s ease,filter .18s ease}
+.car-wheel rect{fill:#10171b;stroke:currentColor;stroke-width:1.7}
+.car-wheel path{fill:none;stroke:#6b7c83;stroke-width:1}
+.car-wheel.cold{color:#58a9ff}.car-wheel.normal{color:#69f0a3}.car-wheel.hot,.car-wheel.worn{color:#ff314d;filter:drop-shadow(0 0 4px #ff314d99)}
+.car-wheel.wear-warning{color:#ffd24e}.car-wheel.brake-hot rect{stroke-width:2.5;filter:drop-shadow(0 0 3px #ff314d)}
+.car-wheel.brake-cold rect{stroke-dasharray:2 2}
+.main-tyre-tile{z-index:2;width:31%;height:43%;gap:1px;background:linear-gradient(100deg,#080d10ed,#10191dcc);border:0;border-bottom:1px solid #38505a;border-left:2px solid #3b5960;box-shadow:0 2px 9px #0007}
+.main-tyre-tile b{color:#a7b7bc;font-size:7px;letter-spacing:.12em}
+.main-tyre-tile span{font-size:clamp(12px,1.7vw,19px);text-shadow:0 0 10px currentColor}
+.main-tyre-tile small,.main-tyre-tile i{font-size:6px;color:#d5dfe2}
+.main-tyre-tile.cold{border-color:var(--blue);background:linear-gradient(100deg,#071626ed,#10191dcc)}
+.main-tyre-tile.normal{border-color:var(--green)}
+.main-tyre-tile.hot,.main-tyre-tile.worn{border-color:var(--red);background:linear-gradient(100deg,#291018ee,#10191dcc)}
+.tyre-meta{min-height:18px;background:linear-gradient(90deg,#13252a,#10171c);border-top:1px solid #284048}
+.tyre-meta>b{color:#fff;font-size:8px}.tyre-meta strong{color:var(--cyan)}
+.ers-content{gap:clamp(6px,1vw,12px);padding:8px 6px}
+.battery-shell{border-color:#42eee0;background:#0c252a;box-shadow:0 0 13px #35e2d322,inset 0 0 7px #000}
+.battery-shell:before{background:#42eee0;box-shadow:0 0 7px #35e2d366}
+.battery-shell i{background:linear-gradient(0deg,#ef3947 0%,#ffb443 36%,#35e2d3 78%);box-shadow:0 0 9px #35e2d344}
+.ers-readouts>div{border-bottom:1px solid #35e2d322}
+.ers-readouts .ers-store b{color:#eafffc;text-shadow:0 0 12px #35e2d344}
+.ers-status-row{border-top:1px solid #ff314d55}
+.timing-grid{background:linear-gradient(90deg,#0c1419,#101b20 50%,#0c1419);border-top:1px solid #30424a;border-bottom:1px solid #30424a}
+.timing-cell{position:relative;background:transparent;border:0;border-left:1px solid #263941}
+.timing-cell:after{content:"";position:absolute;left:0;bottom:0;width:32%;height:2px;background:var(--cyan);opacity:.72}
+.timing-cell.lap-last:after,.timing-cell.lap-best:after{background:var(--red)}
+.timing-cell.sector:after{background:var(--green)}
+.timing-cell.aero-cell:after{background:var(--cyan)}
+.timing-cell.race-cell:after,.timing-cell.flag-cell:after{background:var(--yellow)}
+.timing-cell span{color:#9fb0b6}.timing-cell b{color:#fff}
+.track-map-panel{position:relative;height:76px;min-height:70px;border:0;border-top:1px solid #30434a;border-bottom:1px solid #30434a;border-left:0;background:linear-gradient(90deg,#0a1115,#101a1f 45%,#0a1115);padding:3px 7px}
+.track-map-panel:before{content:"";position:absolute;left:0;top:-1px;width:22%;height:2px;background:linear-gradient(90deg,var(--red),var(--cyan))}
+.track-map-title{font-size:8px;color:#e8f7f7}.track-map-title b{color:var(--cyan)}
+.track-base{stroke:#17262d;stroke-width:14}
+.track-mini{stroke-width:5.2;filter:drop-shadow(0 0 2px #000)}
+.track-mini.gain{filter:drop-shadow(0 0 4px #69f0a377)}
+.track-mini.loss{filter:drop-shadow(0 0 4px #ff314d77)}
+.track-mini.active{stroke-width:7;filter:drop-shadow(0 0 5px #35e2d399)}
+.track-sector-mark{stroke:#ebf7f7;stroke-width:2.1}
+.track-sector-label{font-size:9px;fill:#f2ffff}
+.track-driver{fill:#fff;stroke:var(--red);stroke-width:2.8}
+.track-direction{fill:var(--cyan);stroke:#081014;stroke-width:1.2}
+.rpm-leds i.on.cyan{box-shadow:0 0 9px #35e2d388}
+.rpm-leds i.on.red{box-shadow:0 0 9px #ff314d88}
+.header-button{background:linear-gradient(110deg,#11262a,#141116);border-color:#35e2d3;color:#eafffc}
+.page-button.selected{border-color:var(--cyan);background:linear-gradient(105deg,#123438,#26131a);box-shadow:inset 0 -2px 0 var(--red)}
+.event-banner{box-shadow:0 5px 16px #0009}
+.fuel-cell small{color:var(--cyan)}
+@media(orientation:landscape) and (max-height:520px){
+ .main-grid{grid-template-columns:.72fr .74fr 1.55fr .99fr;grid-template-areas:"speed gear car ers"}
+ .car-tyre-layout{min-height:56px}
+ .track-map-panel{height:63px;min-height:58px}
+}
+@media(orientation:portrait){
+ .main-grid{grid-template-columns:1fr 1fr;grid-template-areas:"speed gear" "ers ers" "car car";grid-template-rows:minmax(82px,1fr) minmax(65px,.75fr) minmax(86px,1fr)}
+ .speed-box{grid-area:speed}.center-box{grid-area:gear}.ers-box{grid-area:ers}.car-box{grid-area:car}
+ .car-tyre-layout{min-height:70px}.car-silhouette{height:96%}
+ .main-tyre-tile{width:34%;height:44%}
+ .track-map-panel{height:66px;min-height:60px}
+}
