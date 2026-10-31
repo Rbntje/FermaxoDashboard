@@ -2,11 +2,12 @@
 """Loopback-first F1 25 / 2026 UDP to WebSocket bridge."""
 import argparse
 import json
+import os
 import socket
 import struct
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from websockets.sync.server import serve
 
 HEADER = 29
@@ -199,26 +200,38 @@ def handler(ws):
             time.sleep(.03)
     except Exception: pass
 
-class Health(BaseHTTPRequestHandler):
+class Health(SimpleHTTPRequestHandler):
+    def __init__(self,*args,**kwargs):
+        root=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        super().__init__(*args,directory=root,**kwargs)
     def do_GET(self):
-        with lock:
-            body=json.dumps({"service":"fermaxo-udp-bridge","validPackets":latest["received"],"invalidPackets":latest["invalid"],"hasTelemetry":bool(latest["data"])}).encode()
-        self.send_response(200);self.send_header("Content-Type","application/json");self.end_headers();self.wfile.write(body)
+        if self.path in ("/health","/health/"):
+            with lock:
+                body=json.dumps({"service":"fermaxo-udp-bridge","validPackets":latest["received"],"invalidPackets":latest["invalid"],"hasTelemetry":bool(latest["data"])}).encode()
+            self.send_response(200);self.send_header("Content-Type","application/json");self.end_headers();self.wfile.write(body)
+            return
+        return super().do_GET()
     def log_message(self,*args): pass
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--udp-host",default="127.0.0.1",help="default loopback; use a private LAN IP for console UDP")
     p.add_argument("--udp-port",type=int,default=20777)
-    p.add_argument("--ws-host",default="127.0.0.1",help="default loopback")
+    p.add_argument("--ws-host",default="0.0.0.0",help="bind for local phone/tablet access")
     p.add_argument("--ws-port",type=int,default=20778)
-    p.add_argument("--health-host",default="127.0.0.1")
-    p.add_argument("--health-port",type=int,default=20779)
+    p.add_argument("--http-host",default="0.0.0.0",help="bind dashboard web server for phone access")
+    p.add_argument("--http-port",type=int,default=20780)
     a=p.parse_args()
     threading.Thread(target=udp_loop,args=(a.udp_host,a.udp_port),daemon=True).start()
-    http=HTTPServer((a.health_host,a.health_port),Health)
+    http=ThreadingHTTPServer((a.http_host,a.http_port),Health)
     threading.Thread(target=http.serve_forever,daemon=True).start()
-    print("Dashboard auto-connect: ws://%s:%s"%(a.ws_host,a.ws_port),flush=True)
+    print("Dashboard on this PC: http://127.0.0.1:%s/"%a.http_port,flush=True)
+    try:
+        addresses=socket.gethostbyname_ex(socket.gethostname())[2]
+        lan=next((ip for ip in addresses if ip.startswith(("192.168.","10.")) or any(ip.startswith("172.%d."%n) for n in range(16,32))),None)
+        if lan: print("Dashboard on phone: http://%s:%s/"%(lan,a.http_port),flush=True)
+    except OSError: pass
+    print("WebSocket bridge: ws://<this-PC-address>:%s"%a.ws_port,flush=True)
     try:
         with serve(handler,a.ws_host,a.ws_port,ping_interval=20,ping_timeout=20) as server: server.serve_forever()
     except KeyboardInterrupt: pass
