@@ -24,8 +24,10 @@ event_flag_until = 0
 bridge_config = {}
 lap_updates = deque(maxlen=500)
 lap_sequence = 0
+motion_frames = {}
+pending_lap_samples = {}
 def udp_loop(host,port):
-    global zones,track_length,red_flag,event_flag,event_flag_until,lap_sequence
+    global zones,track_length,red_flag,event_flag,event_flag_until,lap_sequence,motion_frames,pending_lap_samples
     sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
     try:
@@ -53,19 +55,23 @@ def udp_loop(host,port):
                 uid=packet.get("sessionUID")
                 if data.get("sessionUID") is not None and uid is not None and data["sessionUID"]!=uid:
                     data.clear()
-                    zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0
+                    zones=[];track_length=0;red_flag=False;event_flag=None;event_flag_until=0;motion_frames.clear();pending_lap_samples.clear()
                 data.update({k:v for k,v in packet.items() if k not in ("format","packetVersion","packetId","marshalZones")})
                 data.update(format=packet["format"],packetVersion=packet["packetVersion"],packetId=6,sourcePacketId=packet["packetId"])
+                frame_id=packet["frameIdentifier"]
                 if packet["packetId"] == 0:
-                    data["motionFrameIdentifier"] = packet["frameIdentifier"]
+                    data["motionFrameIdentifier"] = frame_id
                     data["trackPointValid"] = False
+                    motion_frames[frame_id]=(packet.get("worldX"),packet.get("worldZ"))
+                    waiting=pending_lap_samples.get(frame_id)
+                    if waiting:
+                        waiting["sample"].update(worldX=packet.get("worldX"),worldZ=packet.get("worldZ"),trackPointValid=True)
                 elif packet["packetId"] == 2:
-                    data["lapFrameIdentifier"] = packet["frameIdentifier"]
-                    data["trackPointValid"] = (
-                        data.get("motionFrameIdentifier") == packet["frameIdentifier"]
-                        and data.get("worldX") is not None
-                        and data.get("worldZ") is not None
-                    )
+                    data["lapFrameIdentifier"] = frame_id
+                    point=motion_frames.get(frame_id)
+                    data["trackPointValid"] = bool(point and point[0] is not None and point[1] is not None)
+                    if data["trackPointValid"]:
+                        data["worldX"],data["worldZ"]=point
                 if "marshalZones" in packet:
                     zones=packet["marshalZones"];track_length=packet.get("trackLength",0)
                 if "lapDistance" in packet and zones and track_length>0:
@@ -103,7 +109,29 @@ def udp_loop(host,port):
                     lap_sequence+=1
                     sample=data.copy()
                     sample["sessionUID"]=str(sample.get("sessionUID",""))
-                    lap_updates.append((lap_sequence,sample))
+                    point=motion_frames.get(frame_id)
+                    if point and point[0] is not None and point[1] is not None:
+                        sample.update(worldX=point[0],worldZ=point[1],trackPointValid=True)
+                    else:
+                        sample["trackPointValid"]=False
+                    pending_lap_samples[frame_id]={"sequence":lap_sequence,"sample":sample}
+                # Wait briefly for the matching packet ID 0 if UDP packet order is reversed.
+                # Expire old unmatched samples in order, retaining their real lap timing only.
+                for pending_frame,pending in sorted(list(pending_lap_samples.items()),key=lambda item:item[1]["sequence"]):
+                    sample=pending["sample"]
+                    point=motion_frames.get(pending_frame)
+                    if point and point[0] is not None and point[1] is not None:
+                        sample.update(worldX=point[0],worldZ=point[1],trackPointValid=True)
+                    age=(frame_id-pending_frame)&0xFFFFFFFF
+                    expired=age>=2 and age<0x80000000
+                    if sample.get("trackPointValid") or expired:
+                        lap_updates.append((pending["sequence"],sample))
+                        del pending_lap_samples[pending_frame]
+                    else:
+                        break
+                if len(motion_frames)>256:
+                    for old_frame in list(motion_frames)[:-128]:
+                        del motion_frames[old_frame]
         except (ValueError,struct.error,IndexError) as exc:
             with lock: latest["invalid"]+=1
             print("Dropped UDP packet:",exc,flush=True)
