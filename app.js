@@ -27,15 +27,15 @@ function flagInfo(d){if(!d||!d.flag)return null;const f=String(d.flag).toLowerCa
 function eventFor(d){const f=flagInfo(d);if(f)return {tone:f.tone,title:f.title,detail:"RACE CONTROL · LIVE GAME DATA"};if(d.safetyCar==="VSC")return {tone:"vsc",title:"VIRTUAL SAFETY CAR",detail:"GAME DELTA "+signedSeconds(d.scDelta)+" · IN-GAME TARGET"};if(d.safetyCar==="SAFETY CAR")return {tone:"safety",title:"SAFETY CAR",detail:"GAME DELTA "+signedSeconds(d.scDelta)+" · GAP AHEAD "+signedMs(d.gapToCarAheadMs)};if(d.safetyCar==="FORMATION LAP")return {tone:"yellow",title:"FORMATION LAP",detail:"RACE CONTROL"};return null}
 function currentTrack(d){return d&&d.trackId!=null?String(d.trackId):""}
 function saveLaps(){try{localStorage.setItem("fermaxoSavedLaps",JSON.stringify(STATE.laps.slice(0,30)))}catch{setText("statusText","LAP STORAGE FULL · EXPORT LAPS")}}
-function chooseDefaultReference(){const compatible=STATE.laps.filter(x=>x&&x.valid&&x.trackLength>0&&(currentTrack(STATE.data)===""||String(x.trackId)===currentTrack(STATE.data))).sort((a,b)=>a.timeMs-b.timeMs);if(!STATE.laps.some(x=>x.id===STATE.referenceId))STATE.referenceId=compatible[0]?compatible[0].id:"";try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}}
+function chooseDefaultReference(){const track=currentTrack(STATE.data),selected=STATE.laps.find(x=>x&&x.id===STATE.referenceId&&x.valid),compatible=STATE.laps.filter(x=>x&&x.valid&&x.trackLength>0&&(track===""||String(x.trackId)===track)).sort((a,b)=>a.timeMs-b.timeMs);if(!selected||(track!==""&&String(selected.trackId)!==track))STATE.referenceId=compatible[0]?compatible[0].id:"";try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}}
 function referenceLap(){chooseDefaultReference();return STATE.laps.find(x=>x.id===STATE.referenceId&&x.valid)||null}
-function captureLapSample(d){
+function captureLapSample(d,persist=true){
  const uid=d.sessionUID==null?"":String(d.sessionUID),track=currentTrack(d),lap=Number(d.lap);
  if(STATE.captureUID!==uid||STATE.captureTrack!==track){STATE.captureUID=uid;STATE.captureTrack=track;STATE.currentLap=lap;STATE.currentLapSamples=[]}
  else if(STATE.currentLap!=null&&lap!==STATE.currentLap){
   const old=STATE.currentLapSamples,trackLength=Number(old[0]&&old[0].trackLength||d.trackLength),timeMs=Number(d.lastLapMs);
-  const valid=old.length>=STATE.miniCount*2&&timeMs>0&&old.every(s=>!s.invalid);
-  if(valid&&trackLength>0){
+  const valid=old.length>=STATE.miniCount*2&&timeMs>0&&old.every(s=>!s.invalid)&&old.some(s=>s.driverStatus===1||s.driverStatus===4);
+  if(persist&&valid&&trackLength>0){
    const sampleData=old.map(s=>({distance:s.distance,timeMs:s.timeMs}));
    const calc=Mini.calculateLap(sampleData,trackLength,STATE.miniCount,timeMs);
    if(calc.segments.length&&calc.segments.every(s=>s.timeMs!=null)){
@@ -49,7 +49,7 @@ function captureLapSample(d){
  if(!Number.isFinite(distance)||distance<0||!Number.isFinite(time)||time<0||length<=0)return;
  const prev=STATE.currentLapSamples[STATE.currentLapSamples.length-1];
  if(prev&&distance<=prev.distance)return;
- STATE.currentLapSamples.push({distance,timeMs:time,trackLength:length,trackId:d.trackId,invalid:Number(d.currentLapInvalid)===1,speed:Number(d.speed),throttle:Number(d.throttle),brake:Number(d.brake),rpm:Number(d.rpm),gear:Number(d.gear),ersPercent:Number(d.ersPercent)});
+ STATE.currentLapSamples.push({distance,timeMs:time,trackLength:length,trackId:d.trackId,invalid:Number(d.currentLapInvalid)===1,speed:Number(d.speed),throttle:Number(d.throttle),brake:Number(d.brake),rpm:Number(d.rpm),gear:Number(d.gear),ersPercent:Number(d.ersPercent),driverStatus:Number(d.driverStatus)});
 }
 function referenceComparison(samples,completedTime){
  const ref=referenceLap(),d=STATE.data,count=STATE.miniCount;
@@ -113,7 +113,7 @@ function miniTable(d){
 function refOptions(){
  chooseDefaultReference();return '<option value="">NO REFERENCE LAP</option>'+STATE.laps.filter(x=>x&&x.valid).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===STATE.referenceId?"selected":"")+'>'+esc("T"+x.trackId+" · LAP "+x.lapNumber+" · "+lapTime(x.timeMs))+'</option>').join("");
 }
-function recordedData(){return STATE.frames.map(f=>f.data).filter(Boolean)}
+function recordedData(){return STATE.frames.slice(-48).map(f=>f.data).filter(Boolean)}
 function graph(name,key,scale){
  const list=recordedData().slice(-48),values=list.map(d=>Number(d[key])).filter(Number.isFinite);
  if(!values.length)return '<div class="graph-row"><span>'+name+'</span><small>NO RECORDED SAMPLES</small></div>';
@@ -174,19 +174,19 @@ function recordFrame(d){
  const now=Date.now(),pid=Number(d.sourcePacketId);
  if(!STATE.recording)return;
  if(pid===2||pid===6&&now-STATE.lastFrameAt>=100){STATE.frames.push({at:now,data:{...d}});STATE.lastFrameAt=now}
- if(STATE.frames.length>=180000){STATE.recording=false;setStatus("live","RECORDING LIMIT · EXPORT SESSION")}
+ if(STATE.frames.length>=60000){STATE.recording=false;STATE.recordingLimitReached=true}
 }
 function receive(d){
  if(d.format!==2026||d.packetVersion!==1||d.packetId!==6||d.speed==null||d.rpm==null){setStatus("unsupported");return}
  STATE.data=d;STATE.lastPacket=Date.now();STATE.packets++;STATE.status="live";
- if(Number(d.sourcePacketId)===2&&liveData({ ...d })){captureLapSample(d)}
+ if(Number(d.sourcePacketId)===2&&liveData({ ...d })){captureLapSample(d)}else if(Number(d.sourcePacketId)===2&&Number(d.driverStatus)===0){STATE.currentLapSamples=[];STATE.currentLap=Number(d.lap);STATE.captureUID=String(d.sessionUID||"");STATE.captureTrack=currentTrack(d)}
  recordFrame(d);setStatus("live");render()
 }
 function startReplay(frames){
  if(STATE.socket){STATE.socket.onclose=null;STATE.socket.close();STATE.socket=null}
  clearTimeout(STATE.retry);clearTimeout(STATE.replayTimer);STATE.source="replay";STATE.recording=false;let i=0,lastAt=null;
- const step=()=>{if(i>=frames.length){setStatus("live","REPLAY COMPLETE · RECORDED DATA");return}
-  const f=frames[i++],next=f.data||f;STATE.data=next;STATE.lastPacket=Date.now();STATE.packets++;STATE.status="live";render();
+ STATE.currentLapSamples=[];STATE.currentLap=null;STATE.captureUID=null;const step=()=>{if(i>=frames.length){setStatus("live","REPLAY COMPLETE · RECORDED DATA");return}
+  const f=frames[i++],next=f.data||f;STATE.data=next;STATE.lastPacket=Date.now();STATE.packets++;STATE.status="live";if(Number(next.sourcePacketId)===2&&liveData({...next}))captureLapSample(next,false);render();
   const t=Number(f.at),delay=lastAt==null?80:Math.max(20,Math.min(500,t-lastAt));lastAt=Number.isFinite(t)?t:lastAt;STATE.replayTimer=setTimeout(step,delay)
  };
  step()
