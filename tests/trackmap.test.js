@@ -4,7 +4,7 @@ const Track=require("../trackmap.js");
 function circuit(length=5000,rx=800,rz=420){
  return Array.from({length:241},(_,i)=>{
   const f=i/240,a=f*Math.PI*2;
-  return {distance:length*f,worldX:rx*Math.cos(a),worldZ:rz*Math.sin(a),sector:f<.34?0:f<.68?1:2};
+  return {distance:length*f,worldX:rx*Math.cos(a),worldZ:rz*Math.sin(a),trackPointValid:true,sector:f<.34?0:f<.68?1:2};
  });
 }
 test("builds map geometry from recorded world positions for different track shapes",()=>{
