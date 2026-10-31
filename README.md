@@ -16,15 +16,17 @@ Allow Python through Windows Firewall on the private network if prompted. The PC
 
 ### MAIN
 
-The landscape-first, no-scroll driving LCD keeps gear, speed, RPM shift lights, throttle, brake, ERS charge and energy values, lap and sector timing, position, aero mode, DRS (only when applicable), race control, flags and calculated mini-sector deltas visible. Practice, qualifying and race sessions adjust emphasis automatically. Event banners are sourced from received game data and do not replace the key readings.
+The landscape-first, no-scroll driving LCD keeps gear, speed, RPM shift lights, throttle, brake, ERS charge and energy values, lap and sector timing, position, Straight Mode, separate DRS status, race control and flags visible. A top-down car schematic shows four live tyre temperatures, wear, pressure, compound, age and measured overall wear. Practice, qualifying and race sessions adjust emphasis automatically. Event banners are sourced from received game data.
 
-The ERS battery stays prominent on MAIN. Active aero displays Straight Line Mode or Cornering Mode only when the 2026 telemetry says it is available. DRS remains a separate field.
+A track map replaces the former mini-sector tile row. It is built from real world-position points in Motion packets paired by frame identifier with Lap Data distance and sector. Mini-sector paths follow the recorded circuit shape; S1/S2/S3 markers come from recorded sector transitions. The live marker and direction use the current matched position. A map appears only after a complete valid lap with dense coverage and a closed, plausible path. Until then the display explains that a clean lap with matched position data is needed. Track changes select geometry and comparison laps for that track.
+
+The map colours the current mini-sector cyan, measured gains green and measured losses red; unavailable comparisons stay grey. Tap a path segment to inspect its measured delta. Active aero is labelled Straight Mode or Cornering Mode only when 2026 telemetry reports it available. DRS remains separate.
 
 ### ENGINEER
 
-ENGINEER is the only detail page. It combines lap history and comparison, mini-sector detail, saved telemetry graphs, ERS history and modes, tyre state, race and session data, and measured driver-improvement notes. Saved laps can be selected as the comparison reference. Use its recording and export controls to save session data.
+ENGINEER focuses on lap performance: saved lap/reference selection, lap and sector timing, the same measured track map at larger size, mini-sector deltas, recorded speed/throttle/brake/gear traces, and a selected mini-sector comparison of sampled speed, minimum speed, throttle and brake. Saved lap consistency is calculated only from valid recorded laps on the current track. A loss note identifies the selected mini-sector and measured time difference.
 
-Lap consistency is calculated from recorded valid laps on the current track. A mini-sector loss recommendation identifies its measured mini-sector and time difference. Corner-by-corner advice is withheld unless a verified track map exists; this repository does not currently include one.
+Corner names and braking points are not fabricated. Corner-by-corner conclusions require a reliable corner map, which is not bundled with the app. The map is not guessed from a track ID or drawn from an incomplete lap.
 
 Use the two large bottom controls to switch instantly between MAIN and ENGINEER. Connection settings remain in a small overlay, not another page.
 
@@ -54,7 +56,7 @@ The health endpoint is `http://<PC-address>:20780/health`.
 
 ## Telemetry and availability limits
 
-The bridge validates packet size and packet version separately for the F1 25 2026 Season Pack format. It decodes car telemetry, session, lap data, event, session history, car status, car damage and Car Telemetry 2, including 2026 active-aero/overtake fields.
+The bridge validates packet size and packet version separately for the F1 25 2026 Season Pack format. It decodes Motion world positions, car telemetry, session, lap data, event, session history, car status, car damage and Car Telemetry 2, including 2026 active-aero/overtake fields. Position samples are paired with lap-distance samples only when packet frame identifiers match.
 
 The game feed does not provide every possible engineer metric. The app does not infer a target speed, direct gap to the safety car, unreported flag types, or corner names without reliable source data. Those values remain unavailable. No live game session or phone browser is available in the development environment, so verify UDP delivery and device fit on the target setup.
 
