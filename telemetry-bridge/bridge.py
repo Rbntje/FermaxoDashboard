@@ -51,6 +51,13 @@ def parse_packet(buf):
           tyreInnerTempC=list(struct.unpack_from("<4B",buf,o+34)))
         out["engineTempC"] = buf[o+38] if fmt == 2026 else struct.unpack_from("<H",buf,o+38)[0]
         out["tyrePressurePsi"] = list(struct.unpack_from("<4f",buf,o+(39 if fmt==2026 else 40)))
+    elif pid == 16 and fmt == 2026:
+        # 2026 CarTelemetry2: active aero and overtake mode, for every car.
+        if player >= cars: raise ValueError("invalid player index")
+        o = HEADER + player * 10
+        out.update(activeAeroMode=buf[o], activeAeroAvailable=bool(buf[o+1]),
+          overtakeAvailable=bool(buf[o+4]), overtakeActive=bool(buf[o+5]),
+          regulations2026Applicable=bool(buf[o+8]), wrongWay=bool(buf[o+9]))
     elif pid == 1 and fmt == 2026:
         # Fixed 21 marshal slots; each is a packed float start + signed flag.
         count = buf[47]
