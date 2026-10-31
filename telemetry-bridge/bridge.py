@@ -11,6 +11,16 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from websockets.sync.server import serve
 
 from protocol import parse_packet
+
+lock = threading.Lock()
+stop = threading.Event()
+latest = {"revision":0,"received":0,"invalid":0,"data":{}}
+zones = []
+track_length = 0
+red_flag = False
+event_flag = None
+event_flag_until = 0
+bridge_config = {}
 def udp_loop(host,port):
     global zones,track_length,red_flag,event_flag,event_flag_until
     sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
