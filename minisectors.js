@@ -15,7 +15,9 @@ function boundaryTime(samples,distance,length,count,completedTime){
  if(distance>=length){
   const last=samples[samples.length-1],time=Number(completedTime);
   const maxDistance=Math.max(40,length/count*.12);
-  return last&&Number.isFinite(time)&&time>last.timeMs&&time-last.timeMs<=1000&&length-last.distance<=maxDistance?time:null;
+  if(!last||!Number.isFinite(time)||length-last.distance>maxDistance)return null;
+  if(last.distance===length&&Math.abs(time-last.timeMs)<=100)return last.timeMs;
+  return time>last.timeMs&&time-last.timeMs<=1000?time:null;
  }
  for(let i=1;i<samples.length;i++){
   const a=samples[i-1],b=samples[i];
