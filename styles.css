@@ -27,7 +27,7 @@
 .ers-readouts{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.2fr 1fr 1fr;gap:4px}.ers-readouts>div{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:4px 6px;background:#151b22;border-left:2px solid #46515a}.ers-readouts .ers-store{grid-row:span 1;grid-column:span 2;border-left-color:var(--purple);background:#1e1830}.ers-readouts>div:nth-child(2){border-left-color:var(--red)}.ers-readouts>div:nth-child(3){border-left-color:var(--cyan)}.ers-readouts>div:nth-child(4){border-left-color:var(--yellow)}
 .ers-readouts span,.ers-readouts small{color:var(--muted);font-size:7px;letter-spacing:.06em}.ers-readouts b{overflow:hidden;text-overflow:ellipsis;color:#fff;font:800 clamp(14px,2vw,24px)/1.05 var(--display)}.ers-readouts .ers-store b{font-size:clamp(22px,4vw,45px);color:#d6c3ff}.ers-readouts small{font-size:6px}
 .ers-status-row{height:23px;min-height:23px;display:flex;justify-content:space-between;align-items:center;padding:0 9px;background:#21182e;border-top:1px solid #44335d;color:#bba5e9;font-size:8px}.ers-status-row b{color:#fff}
-.timing-grid{height:57px;min-height:57px;display:grid;grid-template-columns:1.05fr 1.1fr repeat(3,.9fr) 1.15fr .75fr 1fr .75fr;gap:3px}
+.timing-grid{height:57px;min-height:57px;display:grid;grid-template-columns:1.05fr 1.1fr repeat(3,.9fr) 1.15fr .75fr 1fr .75fr 1fr;gap:3px}
 .timing-cell{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:4px 6px;overflow:hidden;background:#10171b;border:1px solid #2b383f;border-left:3px solid var(--cyan)}
 .timing-cell span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:7px;font-weight:700;letter-spacing:.06em}.timing-cell b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white);font:800 clamp(12px,1.6vw,20px)/1 var(--display)}
 .lap-last{border-left-color:var(--red)}.lap-best{border-left-color:var(--green)}.sector:nth-child(4){border-left-color:var(--cyan)}.sector:nth-child(5){border-left-color:var(--red)}.sector:nth-child(6){border-left-color:var(--cyan)}.aero-cell{border-left-color:var(--cyan)}.drs-cell{border-left-color:var(--red)}.race-cell{border-left-color:var(--yellow)}.flag-cell{border-left-color:var(--blue)}
@@ -220,3 +220,6 @@ body[data-session="race"] .track-map-panel .track-map-svg{width:84%}
  .track-map-panel .track-map-svg{width:72%}
  .track-map-panel .track-map-readout{font-size:6px}
 }
+
+.fuel-cell small{color:var(--cyan);font-size:6px}
+.bar.steer{position:relative}.bar.steer:after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px solid #eaf2f4;opacity:.8}
