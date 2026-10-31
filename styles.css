@@ -133,3 +133,19 @@ body[data-session="timeTrial"] .delta-box{background:#211932}
  .graph-row{grid-template-columns:60px 1fr 34px;height:26px;min-height:26px}.graph-row>div{height:20px}
  .mini-history{max-height:21vh}
 }
+
+
+/* Two-screen phone LCD navigation and scrollable engineer workspace */
+.page-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:3px 8px}
+.page-button{min-height:44px;font-size:clamp(10px,1.5vw,14px)}
+.detail-screen{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;align-items:stretch}
+.detail-heading{position:sticky;top:-9px;z-index:3;background:var(--screen);padding-top:4px}
+.detail-grid{overflow:visible;grid-auto-rows:minmax(38px,auto);flex:0 0 auto}
+.analysis-section{flex:0 0 auto;margin:6px 0 0;padding:5px 7px;border-left:3px solid var(--red);border-bottom:1px solid var(--line);color:var(--cyan);font:900 clamp(12px,2vw,17px)/1 var(--display);letter-spacing:.1em}
+.engineer-note{flex:0 0 auto}
+.tyre-grid{flex:0 0 auto;min-height:150px}
+@media(orientation:portrait){
+ .detail-screen{padding:7px;gap:5px}
+ .page-nav{height:46px;min-height:46px}
+ .page-button{min-height:42px}
+}
