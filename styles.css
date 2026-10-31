@@ -34,3 +34,80 @@ body[data-session="qualifying"] .sector-line b{color:var(--cyan)}
 body[data-session="race"] .position-line b:first-of-type{font-size:clamp(23px,4vw,42px);color:var(--cyan)}
 body[data-session="race"] .race-control b{color:var(--yellow)}
 body[data-session="practice"] .lap-clock b{color:#f7fafb}
+
+/* Fermaxo Racing display palette with crisp, color-coded LCD fields. */
+:root{--team-red:#f04452;--team-cyan:#39dfd2;--f1-purple:#b38cff;--f1-green:#52e38f;--f1-yellow:#ffd34e;--f1-blue:#59aaff}
+.lcd-app{background:linear-gradient(140deg,#090d11 0%,#0b1217 52%,#080a0e 100%);border-top:3px solid var(--team-red)}
+.brand{color:#f6f8f9}.brand b{color:var(--team-cyan)}
+.status-line{border-bottom-color:#25343b}.session-tag{padding:4px 7px;color:#061012;background:var(--team-cyan);font-size:9px}
+.small-button{border-color:var(--team-red);color:#fff;background:#681a24}
+.small-button:first-of-type{background:#123d43;border-color:var(--team-cyan);color:var(--team-cyan)}
+.drive-grid{border-top:0;border-bottom:0;gap:12px}
+.speed-block,.gear-block,.energy-block{height:calc(100% - 16px);min-height:0;display:flex;flex-direction:column;justify-content:center;padding:clamp(9px,1.4vw,18px);background:#0d1419;border:1px solid #33454d;border-top:4px solid var(--team-cyan)}
+.speed-block{border-top-color:var(--team-red)}
+.speed-block .label{display:inline-flex;align-self:flex-start;padding:3px 8px;background:var(--team-red);color:#fff}
+.speed-block .speed b{color:#fff}
+.gear-block{border-top-color:var(--team-cyan);background:linear-gradient(180deg,#102125,#0c1216)}
+.gear-block .label{display:inline-flex;align-self:center;padding:3px 10px;background:var(--team-cyan);color:#041112}
+.gear-block>b{color:#f7ffff;text-shadow:0 0 20px #39dfd255}
+.energy-block{border-top-color:var(--f1-purple);border-left:1px solid #33454d;padding-left:clamp(9px,1.4vw,18px)}
+.energy-head .label{color:#fff}.energy-head>b{color:#d0b3ff}
+.energy-track{height:17px;border:1px solid #7259a1;background:#20152e}
+.energy-track i{background:linear-gradient(90deg,#8d50e7,#d0a8ff)}
+.energy-details{padding-top:4px}
+.energy-details span{padding:5px 6px;background:#111a20;border-left:2px solid var(--team-cyan)}
+.energy-details span:nth-child(2){border-color:var(--f1-purple)}
+.energy-details span:nth-child(3){border-color:var(--f1-green)}
+.power-mode{border-top:1px solid #39464d}
+.timing-line{gap:7px;min-height:76px;border:0}
+.timing-line>div{height:calc(100% - 8px);min-width:0;justify-content:center;padding:6px 10px;border:1px solid #34454c;border-left:4px solid var(--team-cyan);background:#0d1419}
+.timing-line>div:first-child{padding-left:10px;border-left:4px solid var(--team-red)}
+.timing-line .delta{border-left-color:var(--f1-purple)}
+.timing-line .race-control{border-left-color:var(--f1-yellow)}
+.timing-line .race-flag{border-left-color:var(--f1-blue)}
+.timing-line span{display:inline-flex;align-self:flex-start;padding:2px 5px;background:#26343a;color:#d5e1e4;font-size:8px}
+.timing-line .lap-clock span{background:var(--team-red);color:#fff}
+.timing-line .delta span{background:#68459d;color:#fff}
+.timing-line .race-control span{background:#9a7410;color:#111}
+.timing-line .race-flag span{background:#245b8d;color:#fff}
+.timing-line b{padding-top:3px}
+.delta b{color:var(--f1-purple)}
+.sector-line{min-height:37px;justify-content:flex-start;gap:7px;border:0}
+.sector-line>span{display:flex;align-items:center;gap:7px;padding:6px 9px;background:#111a20;border-bottom:2px solid var(--team-cyan)}
+.sector-line>span:nth-child(2){border-color:var(--team-red)}
+.sector-line>span:nth-child(3){border-color:var(--f1-purple)}
+.sector-line>span:nth-child(4){border-color:var(--f1-green)}
+.sector-line b{color:#f7fafb}
+.input-bars{border:0;gap:8px;padding:7px 0}
+.input-row{padding:8px 10px;background:#0d1419;border-left:4px solid var(--team-cyan)}
+.input-row:nth-child(2){border-left-color:var(--team-red)}
+.input-row .bar{border:1px solid #34464d;background:#1a252b;height:10px}
+.input-row .bar i{background:var(--team-cyan)}
+.input-row .bar.brake i{background:var(--team-red)}
+.position-line{margin-top:auto;padding:7px 8px;background:#151d22;border-left:3px solid var(--f1-yellow)}
+.position-line>span:first-child{color:var(--f1-yellow)}
+.position-line .lap-label{color:var(--team-cyan)}
+.race-flag b{padding:2px 5px}
+body[data-flag="yellow"] .race-flag{border-left-color:var(--f1-yellow)}
+body[data-flag="red"] .race-flag{border-left-color:var(--team-red)}
+body[data-flag="blue"] .race-flag{border-left-color:var(--f1-blue)}
+body[data-flag="green"] .race-flag{border-left-color:var(--f1-green)}
+.event-banner{border-left:7px solid var(--f1-yellow);box-shadow:inset 0 0 0 1px #ffffff18}
+.event-banner.red{border-left-color:#fff}.event-banner.blue{border-left-color:#d1ecff}.event-banner.green{border-left-color:#d2ffe4}
+.page-nav{background:#0b1115;border-top:2px solid #27373e}
+.page-button{background:#0d1419;border-right:1px solid #202d33}
+.page-button.selected{color:#071012;background:var(--team-cyan);box-shadow:none}
+.detail-heading b{display:inline-flex;align-self:flex-start;padding:4px 9px;background:var(--team-red);color:#fff}
+.detail-row{padding:0 10px;background:#0d1419;border-left:3px solid var(--team-cyan);margin:3px 0}
+.detail-row:nth-child(4n+2){border-color:var(--team-red)}
+.detail-row:nth-child(4n+3){border-color:var(--f1-purple)}
+.detail-row:nth-child(4n){border-color:var(--f1-green)}
+.detail-tools button{border-color:var(--team-cyan);background:#102226;color:var(--team-cyan)}
+@media(orientation:portrait){
+ .drive-grid{gap:6px}
+ .speed-block,.gear-block,.energy-block{height:calc(100% - 8px);padding:8px}
+ .timing-line{gap:4px}
+ .timing-line>div{padding:4px 5px}
+ .sector-line>span{padding:5px}
+ .position-line{margin-top:7px}
+}
