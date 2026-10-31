@@ -15,14 +15,14 @@ function boundaryTime(samples,distance,length,count,completedTime){
  if(distance>=length){
   const last=samples[samples.length-1],time=Number(completedTime);
   const maxDistance=Math.max(40,length/count*.12);
-  return last&&Number.isFinite(time)&&time>last.timeMs&&time-last.timeMs<=2000&&length-last.distance<=maxDistance?time:null;
+  return last&&Number.isFinite(time)&&time>last.timeMs&&time-last.timeMs<=1000&&length-last.distance<=maxDistance?time:null;
  }
  for(let i=1;i<samples.length;i++){
   const a=samples[i-1],b=samples[i];
   if(a.distance<=distance&&b.distance>=distance&&b.distance>a.distance){
    const gapTime=b.timeMs-a.timeMs,gapDistance=b.distance-a.distance;
    const maxDistance=Math.max(100,length/count*2);
-   if(gapTime<=0||gapTime>2000||gapDistance>maxDistance)return null;
+   if(gapTime<=0||gapTime>1000||gapDistance>maxDistance)return null;
    const ratio=(distance-a.distance)/gapDistance;
    return a.timeMs+gapTime*ratio;
   }
