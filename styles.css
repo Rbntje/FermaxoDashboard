@@ -203,3 +203,20 @@ body[data-session="timeTrial"] .delta-box{background:#211932}
  .track-map-panel{height:62px;min-height:58px}
  .engineer-map-wrap .track-map-host{min-height:150px}
 }
+
+
+
+.track-map-panel .track-map-host{display:flex;flex-direction:row;gap:6px}
+.track-map-panel .track-map-svg{width:78%;height:100%;min-width:0}
+.track-map-panel .track-map-readout{position:static;left:auto;flex:1;min-width:50px;display:grid;place-items:center;color:#e7eef0;font-size:clamp(6px,.8vw,9px);line-height:1.25;overflow-wrap:anywhere}
+body[data-session="qualifying"] .track-map-panel{height:82px;min-height:76px;border-left-color:var(--yellow)}
+body[data-session="race"] .track-map-panel{height:60px;min-height:56px}
+body[data-session="race"] .track-map-panel .track-map-svg{width:84%}
+@media(orientation:landscape) and (max-height:520px){
+ body[data-session="qualifying"] .track-map-panel{height:68px;min-height:64px}
+ body[data-session="race"] .track-map-panel{height:54px;min-height:50px}
+}
+@media(orientation:portrait){
+ .track-map-panel .track-map-svg{width:72%}
+ .track-map-panel .track-map-readout{font-size:6px}
+}
