@@ -25,7 +25,16 @@ def parse_packet(buf):
            "sessionTime":struct.unpack_from("<f",buf,15)[0],
            "frameIdentifier":struct.unpack_from("<I",buf,19)[0],
            "overallFrameIdentifier":struct.unpack_from("<I",buf,23)[0]}
-    if pid == 6:
+    if pid == 0:
+        # Motion packets begin with the player's world XYZ position.
+        # F1 25 legacy slot is 60 bytes; 2026 Season Pack slot is 54 bytes.
+        slot = 54 if fmt == 2026 else 60
+        if player >= cars: raise ValueError("invalid player index")
+        o = HEADER + player * slot
+        out.update(worldX=struct.unpack_from("<f",buf,o)[0],
+          worldY=struct.unpack_from("<f",buf,o+4)[0],
+          worldZ=struct.unpack_from("<f",buf,o+8)[0])
+    elif pid == 6:
         slot = 59 if fmt == 2026 else 60
         if player >= cars: raise ValueError("invalid player index")
         o = HEADER + player * slot
