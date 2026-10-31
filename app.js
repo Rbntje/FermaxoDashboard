@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 const $=id=>document.getElementById(id),Mini=window.FermaxoMiniSectors;
-const PAGES=["home","ers","timing","tyres","telemetry","race","engineer"];
+const PAGES=["home","engineer"];
 const SESSIONS={1:"PRACTICE 1",2:"PRACTICE 2",3:"PRACTICE 3",4:"SHORT PRACTICE",5:"QUALIFYING 1",6:"QUALIFYING 2",7:"QUALIFYING 3",8:"SHORT QUALIFYING",9:"ONE SHOT QUALIFYING",10:"RACE",11:"SPRINT",12:"TIME TRIAL"};
 const DRIVER={0:"GARAGE",1:"FLYING LAP",2:"IN LAP",3:"OUT LAP",4:"ON TRACK"};
 const STATE={socket:null,page:"home",status:"waiting",data:null,source:"none",packets:0,lastPacket:0,retry:null,recording:false,frames:[],replayTimer:null,frameAt:0,laps:[],referenceId:"",miniCount:12,currentLap:null,currentLapSamples:[],currentLapIncomplete:false,captureUID:null,captureTrack:null,lastFrameAt:0,healthTimer:null};
@@ -132,12 +132,14 @@ function referenceSampleAt(distance,ref){
 }
 function renderDetail(page,d){
  const root=$("detailPage");let h='<header class="detail-heading"><span>FERMAXO RACING / LIVE ENGINEERING</span><b>'+({ers:"ERS SYSTEM",timing:"LAP & MINI-SECTOR TIMING",tyres:"TYRE ENGINEERING",telemetry:"TELEMETRY ANALYSIS",race:"RACE CONTROL",engineer:"RACE ENGINEER"}[page]||"DETAIL")+'</b></header>';
- if(page==="ers"){
+ if(page==="ers"||page==="engineer"){
+  if(page==="engineer")h+='<h2 class="analysis-section">ENERGY / ACTIVE AERO</h2>';
   h+='<div class="detail-grid">'+row("BATTERY",d?num(d.ersPercent,1,"%"):"--")+row("ENERGY STORE",d?num(d.energyKj,1," kJ"):"--")+row("DEPLOYED THIS LAP",d?num(d.energyUsedLapKj,1," kJ"):"--")+row("HARVESTED THIS LAP",d?num(d.energyHarvestedLapKj,1," kJ"):"--")+row("DEPLOYMENT MODE",d?modeName(d.ersMode):"--")+row("OVERTAKE MODE",d&&d.overtakeActive!=null?(d.overtakeActive?"ACTIVE":d.overtakeAvailable?"AVAILABLE":"OFF"):"--")+row("ACTIVE AERO",d?aeroName(d):"--")+'</div>';
   const vals=recordedData().slice(-22).map(x=>Number(x.ersPercent)).filter(Number.isFinite);
   h+='<section class="energy-trace"><b>RECORDED BATTERY TRACE</b><div>'+vals.map(v=>'<i title="'+v.toFixed(1)+'%" style="height:'+Math.max(2,Math.min(100,v))+'%"></i>').join("")+'</div><small>'+(vals.length?vals.length+" CAPTURED SAMPLES":"NO RECORDED SAMPLES · START REC IN TIMING")+'</small></section>';
  }
- if(page==="timing"){
+ if(page==="timing"||page==="engineer"){
+  if(page==="engineer")h+='<h2 class="analysis-section">LAP AND MINI-SECTOR ANALYSIS</h2>';
   h+='<div class="detail-tools"><button id="recordButton">'+(STATE.recording?"STOP REC":"START REC")+'</button><button id="saveSessionButton">SAVE JSON</button><button id="saveCsvButton">EXPORT CSV</button><button id="saveLapsButton">EXPORT LAPS</button><button id="loadLapsButton">LOAD FILE</button><span>'+STATE.frames.length+' SAMPLES</span></div>';
   h+='<label class="reference-control">REFERENCE LAP <select id="referenceSelect">'+refOptions()+'</select></label>';
   h+='<div class="detail-grid timing-summary">'+row("CURRENT",d?lapTime(d.currentLapMs):"--")+row("LAST",d?lapTime(d.lastLapMs):"--")+row("SESSION BEST",d?lapTime(d.bestLapMs):"--")+row("DELTA TO BEST",d?signedMs(d.deltaMs):"--")+row("S1",d?lapTime(d.s1Ms):"--")+row("S2",d?lapTime(d.s2Ms):"--")+row("S3",d?lapTime(d.s3Ms):"--")+'</div>';
@@ -148,22 +150,26 @@ function renderDetail(page,d){
   h+='<div class="saved-lap-history"><b>SAVED MINI-SECTOR HISTORY · TAP A LAP TO SET REFERENCE</b><div>'+ (savedRows||'<small>NO COMPLETE VALID LAPS SAVED</small>') +'</div></div>';
   h+='<p class="detail-note">MINI-SECTORS ARE CALCULATED FROM RECEIVED LAP-DISTANCE / LAP-TIME SAMPLES, NOT GAME-PROVIDED SECTORS.</p>';
  }
- if(page==="tyres"){
+ if(page==="tyres"||page==="engineer"){
+  if(page==="engineer")h+='<h2 class="analysis-section">TYRE ANALYSIS</h2>';
   const order=[2,3,0,1],names=["FL","FR","RL","RR"],wear=d&&d.tyreWear||[],surface=d&&d.tyreSurfaceTempC||[],inner=d&&d.tyreInnerTempC||[],pressure=d&&d.tyrePressurePsi||[],actual=d&&d.actualTyreCompound,visual=d&&d.visualTyreCompound;
   const compound=actual!=null?({16:"C5",17:"C4",18:"C3",19:"C2",20:"C1",21:"C0",22:"C6",7:"INTER",8:"WET"})[actual]||"COMPOUND "+actual:"--";
   h+='<div class="detail-grid tyre-summary">'+row("ACTUAL COMPOUND",compound)+row("VISUAL COMPOUND",visual!=null?({16:"SOFT",17:"MEDIUM",18:"HARD",7:"INTER",8:"WET"})[visual]||"COMPOUND "+visual:"--")+row("TYRE SET AGE",d?num(d.tyreAgeLaps,0," laps"):"--")+'</div>';
   h+='<div class="tyre-grid">'+order.map((idx,i)=>'<section class="tyre-cell"><b>'+names[i]+'</b><span>WEAR <strong>'+val(wear[idx],"%")+'</strong></span><span>SURFACE <strong>'+val(surface[idx]," °C")+'</strong></span><span>INNER <strong>'+val(inner[idx]," °C")+'</strong></span><span>PRESSURE <strong>'+val(pressure[idx]," psi")+'</strong></span></section>').join("")+'</div>';
  }
- if(page==="telemetry"){
+ if(page==="telemetry"||page==="engineer"){
+  if(page==="engineer")h+='<h2 class="analysis-section">RECORDED TELEMETRY</h2>';
   const ref=referenceLap(),sample=d&&ref&&d.lapDistance!=null?referenceSampleAt(Number(d.lapDistance),ref):null;
-  h+='<div class="detail-tools"><button id="recordButton">'+(STATE.recording?"STOP REC":"START REC")+'</button><span>ONLY CAPTURED LIVE SAMPLES ARE PLOTTED</span></div>';
+  h+='<div class="detail-tools"><span>ONLY CAPTURED LIVE SAMPLES ARE PLOTTED · '+STATE.frames.length+' SAMPLES</span></div>';
   h+='<div class="graph-stack">'+graph("SPEED km/h","speed",360)+graph("THROTTLE %","throttle",1)+graph("BRAKE %","brake",1)+graph("ENGINE RPM","rpm",15000)+graph("GEAR","gear",8)+'</div>';
   h+='<div class="detail-grid">'+row("CURRENT LAP",d?lapTime(d.currentLapMs):"--")+row("REFERENCE LAP",ref?lapTime(ref.timeMs):"--")+row("SPEED VS REF",d&&sample&&sample.speed!=null?num(Number(d.speed)-Number(sample.speed),0," km/h"):"--")+row("THROTTLE VS REF",d&&sample&&sample.throttle!=null?num((Number(d.throttle)-Number(sample.throttle))*100,0," %"):"--")+row("BRAKE VS REF",d&&sample&&sample.brake!=null?num((Number(d.brake)-Number(sample.brake))*100,0," %"):"--")+'</div>';
  }
- if(page==="race"){
+ if(page==="race"||page==="engineer"){
+  if(page==="engineer")h+='<h2 class="analysis-section">RACE AND SESSION INFORMATION</h2>';
   h+='<div class="detail-grid">'+row("SESSION",d?category(d)==="finished"?"FINISHED":SESSIONS[d.sessionType]||"SESSION":"--")+row("POSITION",d?num(d.position):"--")+row("LAP",d?num(d.lap)+" / "+num(d.totalLaps):"--")+row("GAP AHEAD",d?signedMs(d.gapToCarAheadMs):"--")+row("GAP TO LEADER",d?signedMs(d.gapToLeaderMs):"--")+row("GAME SC DELTA",d?signedSeconds(d.scDelta):"--")+row("RACE CONTROL",d?d.safetyCar||"CLEAR":"--")+row("PIT STATUS",d?({0:"NOT IN PIT",1:"PITTING",2:"PIT LANE"})[d.pitStatus]||"--":"--")+row("PIT STOPS",d?num(d.numPitStops):"--")+row("PIT-LANE TIME",d&&d.pitLaneTimerActive?num(d.pitLaneTimeMs/1000,1," s"):"--")+row("PENALTY TIME",d?num(d.penalties,0," s"):"--")+row("DRIVE-THROUGH LEFT",d?num(d.unservedDriveThrough):"--")+row("STOP-GO LEFT",d?num(d.unservedStopGo):"--")+row("WARNINGS",d?num(d.totalWarnings):"--")+row("FUEL",d?num(d.fuelKg,1," kg"):"--")+row("FUEL REMAINING",d?num(d.fuelRemainingLaps,1," laps"):"--")+'</div>';
  }
  if(page==="engineer"){
+  h+='<h2 class="analysis-section">DRIVER IMPROVEMENT</h2>';
   const comp=miniItems(),loss=comp?comp.filter(s=>s.deltaMs!=null).sort((a,b)=>b.deltaMs-a.deltaMs)[0]:null,ref=referenceLap(),sample=d&&ref&&d.lapDistance!=null?referenceSampleAt(Number(d.lapDistance),ref):null;
   h+='<div class="detail-grid">'+row("CURRENT DELTA",d?signedMs(d.deltaMs):"--")+row("REFERENCE",ref?lapTime(ref.timeMs):"--")+row("CURRENT SPEED",d?num(d.speed,0," km/h"):"--")+row("REFERENCE SPEED",sample?num(sample.speed,0," km/h"):"--")+row("CURRENT THROTTLE",d?num(d.throttle*100,0,"%"):"--")+row("REFERENCE THROTTLE",sample&&sample.throttle!=null?num(sample.throttle*100,0,"%"):"--")+row("CURRENT BRAKE",d?num(d.brake*100,0,"%"):"--")+row("REFERENCE BRAKE",sample&&sample.brake!=null?num(sample.brake*100,0,"%"):"--")+'</div>';
   h+=loss&&loss.deltaMs>0?'<p class="engineer-note">CALCULATED TIME LOSS: MINI-SECTOR '+String(loss.index).padStart(2,"0")+' · '+signedMs(loss.deltaMs)+' VS SELECTED REFERENCE. REVIEW THE SAMPLED SPEED / BRAKE / THROTTLE TRACE IN THIS SECTION.</p>':'<p class="engineer-note">NO MEASURED MINI-SECTOR TIME LOSS AVAILABLE. ENGINEER ADVICE REQUIRES A VALID SAVED REFERENCE LAP; NO GENERAL SPEED OR TYRE THRESHOLD IS ASSUMED.</p>';
