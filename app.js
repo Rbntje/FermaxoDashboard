@@ -6,9 +6,10 @@ const SESSIONS={1:"PRACTICE 1",2:"PRACTICE 2",3:"PRACTICE 3",4:"SHORT PRACTICE",
 const DRIVER={0:"GARAGE",1:"FLYING LAP",2:"IN LAP",3:"OUT LAP",4:"ON TRACK"};
 const STATE={socket:null,page:"home",status:"waiting",data:null,source:"none",packets:0,lastPacket:0,retry:null,recording:false,frames:[],replayTimer:null,frameAt:0,laps:[],referenceId:"",miniCount:12,currentLap:null,currentLapSamples:[],currentLapIncomplete:false,captureUID:null,captureTrack:null,lastFrameAt:0,healthTimer:null};
 function readStore(key,fallback){try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch{return fallback}}
+function readString(key,fallback){try{return localStorage.getItem(key)||fallback}catch{return fallback}}
 STATE.laps=readStore("fermaxoSavedLaps",[]);
-STATE.referenceId=localStorage.getItem("fermaxoReferenceLap")||"";
-STATE.miniCount=Number(localStorage.getItem("fermaxoMiniSectorCount")||12);
+STATE.referenceId=readString("fermaxoReferenceLap","");
+STATE.miniCount=Number(readString("fermaxoMiniSectorCount","12"));
 if(![8,12,16,24].includes(STATE.miniCount))STATE.miniCount=12;
 let detailPage="",detailAt=0,miniCacheKey="",miniCache=null;
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -241,7 +242,7 @@ $("miniSectorCount").value=String(STATE.miniCount);$("miniSectorCount").onchange
 $("fullscreenButton").onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.()};
 $("copyPhoneUrl").onclick=async()=>{const text=$("phoneUrlValue").textContent;if(!text||text==="--")return;try{await navigator.clipboard.writeText(text);setText("settingsHelp","PHONE URL COPIED")}catch{setText("settingsHelp",text)}};
 $("loadFile").onchange=e=>{if(e.target.files[0])importFile(e.target.files[0]);e.target.value=""};
-const stored=localStorage.getItem("fermaxoBridgeUrl");if(stored)$("bridgeUrl").value=stored;else if(location.hostname&&location.protocol!=="file:")$("bridgeUrl").value="ws://"+location.hostname+":20778";
+const stored=readString("fermaxoBridgeUrl","");if(stored)$("bridgeUrl").value=stored;else if(location.hostname&&location.protocol!=="file:")$("bridgeUrl").value="ws://"+location.hostname+":20778";
 setInterval(()=>{if(STATE.source==="live"&&STATE.lastPacket&&Date.now()-STATE.lastPacket>2500&&STATE.status==="live"){STATE.data=null;setStatus("stale");render()}},500);
 STATE.healthTimer=setInterval(pollHealth,2500);pollHealth();render();STATE.retry=setTimeout(connect,250);
 })();
