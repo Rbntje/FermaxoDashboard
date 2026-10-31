@@ -12,15 +12,19 @@ def parse_packet(buf):
     if len(buf) < HEADER:
         raise ValueError("short header")
     fmt = struct.unpack_from("<H", buf, 0)[0]
-    version, pid, player = buf[5], buf[6], buf[27]
+    game_year,version,pid,player=buf[2],buf[5],buf[6],buf[27]
     if fmt not in SIZES or SIZES[fmt].get(pid) != len(buf):
         raise ValueError("unsupported format, packet ID, or size")
     if version != 1:
         raise ValueError("unsupported packet version")
+    if game_year not in (25,26):
+        raise ValueError("unsupported game year")
     cars = 24 if fmt == 2026 else 22
-    out = {"format":fmt,"packetVersion":version,"packetId":pid,
+    out = {"format":fmt,"gameYear":game_year,"packetVersion":version,"packetId":pid,
            "sessionUID":struct.unpack_from("<Q",buf,7)[0],
-           "sessionTime":struct.unpack_from("<f",buf,15)[0]}
+           "sessionTime":struct.unpack_from("<f",buf,15)[0],
+           "frameIdentifier":struct.unpack_from("<I",buf,19)[0],
+           "overallFrameIdentifier":struct.unpack_from("<I",buf,23)[0]}
     if pid == 6:
         slot = 59 if fmt == 2026 else 60
         if player >= cars: raise ValueError("invalid player index")
