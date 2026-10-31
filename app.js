@@ -67,20 +67,91 @@ function miniItems(){
  const samples=STATE.currentLapSamples.map(s=>({distance:s.distance,timeMs:s.timeMs})),comparison=referenceComparison(samples,null);
  miniCacheKey=key;miniCache=comparison?comparison.segments:null;return miniCache
 }
-function renderMini(){
- const d=liveData(STATE.data)?STATE.data:null,ref=referenceLap(),kind=d?category(d):"standby",segments=d?miniItems():null,count=STATE.miniCount;
- setText("miniSectorTitle",kind==="qualifying"?"QUALIFYING · MINI DELTA":"MINI-SECTOR DELTA");
- setText("miniReferenceTitle",ref?"REF "+lapTime(ref.timeMs):"REFERENCE --");
- const host=$("miniStrip");if(!host)return;
- let html="";
- for(let i=0;i<count;i++){
-  const s=segments&&segments[i],delta=s&&s.deltaMs;
-  const cls=delta==null?"neutral":delta<0?"gain":delta>0?"loss":"neutral";
-  const mark=delta==null?"--":(delta>0?"+":"")+Math.abs(delta/1000).toFixed(2);
-  html+='<span class="mini-cell '+cls+'"><small>M'+String(i+1).padStart(2,"0")+'</small><b>'+mark+'</b></span>';
+let trackGeometryCacheId="",trackGeometryCache=null,trackRouteKeys={};
+function trackMapReference(d){
+ if(!d||d.trackId==null||d.trackLength==null)return null;
+ const track=String(d.trackId);
+ const chosen=referenceLap();
+ const candidates=[chosen,...STATE.laps.filter(x=>x&&x.valid&&x.mapValid&&String(x.trackId)===track&&Number(x.trackLength)===Number(d.trackLength)).sort((a,b)=>a.timeMs-b.timeMs)];
+ for(const lap of candidates){
+  if(!lap||!lap.mapValid||String(lap.trackId)!==track||Number(lap.trackLength)!==Number(d.trackLength))continue;
+  const map=Track&&Track.prepare(lap.samples,Number(lap.trackLength),STATE.miniCount);
+  if(map&&map.valid)return lap;
  }
- host.innerHTML=html;
+ return null;
 }
+function trackGeometry(ref){
+ if(!ref)return null;
+ if(trackGeometryCacheId===ref.id)return trackGeometryCache;
+ trackGeometryCacheId=ref.id;
+ trackGeometryCache=Track.prepare(ref.samples,Number(ref.trackLength),STATE.miniCount);
+ return trackGeometryCache&&trackGeometryCache.valid?trackGeometryCache:null;
+}
+function mapPointList(points,bounds){
+ return points.map(p=>Track.projectWorld(p.x,p.z,bounds)).filter(Boolean).map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+}
+function trackSvgMarkup(hostId,d,ref,geo,detailed){
+ const count=STATE.miniCount,length=Number(ref.trackLength),projection=Track.project(geo.points,360,190,18),all=projection.points;
+ if(!all.length)return '<div class="track-map-empty">TRACK MAP UNAVAILABLE</div>';
+ const base=all.map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ")+" "+all[0].x.toFixed(1)+","+all[0].y.toFixed(1);
+ const mini=Track.split(geo.points,length,count),comp=miniItems()||[],lapDistance=d&&Number.isFinite(Number(d.lapDistance))?Number(d.lapDistance):null;
+ const current=lapDistance==null?-1:Math.max(0,Math.min(count-1,Math.floor(Math.min(lapDistance,length-.001)/length*count)));
+ let paths="";
+ for(let i=0;i<mini.length;i++){
+  const pts=mini[i].points;
+  if(pts.length<2)continue;
+  let cls="neutral";
+  if(i===current&&d)cls="active";
+  else if(comp[i]&&comp[i].deltaMs!=null)cls=comp[i].deltaMs<0?"gain":comp[i].deltaMs>0?"loss":"neutral";
+  const line=mapPointList(pts,projection.bounds);
+  if(!line)continue;
+  paths+='<polyline class="track-mini-hit" data-mini="'+i+'" points="'+line+'"></polyline><polyline class="track-mini '+cls+(STATE.selectedMini===i?" selected":"")+'" data-mini="'+i+'" points="'+line+'"></polyline>';
+ }
+ let marks="";
+ for(const boundary of Track.sectorBoundaries(geo.points)){
+  const p=Track.projectWorld(boundary.x,boundary.z,projection.bounds);if(!p)continue;
+  let nearest=0,best=Infinity;
+  for(let j=0;j<geo.points.length;j++){const e=geo.points[j],dist=Math.abs(e.distance-boundary.distance);if(dist<best){best=dist;nearest=j}}
+  const before=all[Math.max(0,nearest-1)],after=all[Math.min(all.length-1,nearest+1)];
+  const dx=after.x-before.x,dy=after.y-before.y,n=Math.hypot(dx,dy)||1,nx=-dy/n*6,ny=dx/n*6;
+  marks+='<line class="track-sector-mark" x1="'+(p.x-nx).toFixed(1)+'" y1="'+(p.y-ny).toFixed(1)+'" x2="'+(p.x+nx).toFixed(1)+'" y2="'+(p.y+ny).toFixed(1)+'"></line><text class="track-sector-label" x="'+(p.x+8).toFixed(1)+'" y="'+(p.y-5).toFixed(1)+'">S'+(boundary.sector+1)+'</text>';
+ }
+ const first=all[0],startMark='<circle class="track-start" cx="'+first.x.toFixed(1)+'" cy="'+first.y.toFixed(1)+'" r="3.2"></circle><text class="track-sector-label" x="'+(first.x+7).toFixed(1)+'" y="'+(first.y+3).toFixed(1)+'">S/F</text>';
+ return '<svg class="track-map-svg" viewBox="0 0 360 190" role="img" aria-label="Measured circuit layout with selectable mini-sectors"><polyline class="track-base" points="'+base+'"></polyline>'+paths+marks+startMark+'<polygon id="'+hostId+'Direction" class="track-direction" points="0,0 0,0 0,0" visibility="hidden"></polygon><circle id="'+hostId+'Driver" class="track-driver" cx="0" cy="0" r="4" visibility="hidden"></circle></svg><div class="track-map-readout" id="'+hostId+'Readout"></div>';
+}
+function renderTrackMap(hostId,d,detailed){
+ const host=$(hostId);if(!host)return;
+ const ref=trackMapReference(d),geo=trackGeometry(ref),currentTrackId=d&&d.trackId!=null?String(d.trackId):"";
+ if(!ref||!geo){
+  const key="none|"+currentTrackId;
+  if(trackRouteKeys[hostId]!==key){host.innerHTML='<div class="track-map-empty">'+(d?"NO VERIFIED MAP · COMPLETE A CLEAN LAP WITH MATCHED UDP POSITION DATA":"TRACK MAP · STANDBY")+'</div><div class="track-map-readout" id="'+hostId+'Readout"></div>';trackRouteKeys[hostId]=key}
+  const emptyReadout=$(hostId+"Readout");if(emptyReadout)emptyReadout.textContent="MINI-SECTOR COMPARISON · --";
+  setText("miniReferenceTitle","REFERENCE --");
+  return;
+ }
+ const comp=miniItems()||[],lapDistance=d&&Number.isFinite(Number(d.lapDistance))?Number(d.lapDistance):null;
+ const idx=lapDistance==null?-1:Math.max(0,Math.min(STATE.miniCount-1,Math.floor(Math.min(lapDistance,Number(ref.trackLength)-.001)/Number(ref.trackLength)*STATE.miniCount)));
+ const statuses=comp.map((x,i)=>i===idx&&d?"active":x&&x.deltaMs!=null?x.deltaMs<0?"gain":x.deltaMs>0?"loss":"neutral":"neutral").join(",");
+ const routeKey=[ref.id,STATE.miniCount,idx,STATE.selectedMini,statuses].join("|");
+ if(trackRouteKeys[hostId]!==routeKey){host.innerHTML=trackSvgMarkup(hostId,d,ref,geo,detailed);trackRouteKeys[hostId]=routeKey;
+  host.querySelectorAll("[data-mini]").forEach(el=>el.addEventListener("click",()=>{STATE.selectedMini=Number(el.dataset.mini);if(detailed){detailPage="";render()}else renderTrackMap(hostId,d,false)}));
+ }
+ const projection=Track.project(geo.points,360,190,18),live=d&&d.trackPointValid===true?Track.projectWorld(Number(d.worldX),Number(d.worldZ),projection.bounds):null;
+ const marker=$(hostId+"Driver"),direction=$(hostId+"Direction");
+ if(marker&&live&&live.x>=0&&live.x<=360&&live.y>=0&&live.y<=190){
+  marker.setAttribute("cx",live.x);marker.setAttribute("cy",live.y);marker.setAttribute("visibility","visible");
+  let nearest=0,best=Infinity;
+  for(let j=0;j<geo.points.length;j++){const p=geo.points[j],dist=(p.x-Number(d.worldX))**2+(p.z-Number(d.worldZ))**2;if(dist<best){best=dist;nearest=j}}
+  const a=projection.points[nearest],b=projection.points[(nearest+1)%projection.points.length],ang=Math.atan2(b.y-a.y,b.x-a.x),len=8,half=4;
+  const tip=[live.x+Math.cos(ang)*len,live.y+Math.sin(ang)*len],back=[live.x-Math.cos(ang)*len*.45,live.y-Math.sin(ang)*len*.45];
+  const left=[back[0]+Math.cos(ang+Math.PI/2)*half,back[1]+Math.sin(ang+Math.PI/2)*half],right=[back[0]+Math.cos(ang-Math.PI/2)*half,back[1]+Math.sin(ang-Math.PI/2)*half];
+  if(direction){direction.setAttribute("points",[tip,left,right].map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" "));direction.setAttribute("visibility","visible")}
+ }else{if(marker)marker.setAttribute("visibility","hidden");if(direction)direction.setAttribute("visibility","hidden")}
+ const item=comp[STATE.selectedMini],delta=item&&item.deltaMs,readout=$(hostId+"Readout");
+ if(readout){const state=delta==null?"NO COMPARISON":delta<0?"GAIN":"LOSS";readout.textContent="M"+String(STATE.selectedMini+1).padStart(2,"0")+" · "+(delta==null?"--":signedMs(delta))+" · "+state+(STATE.selectedMini===idx?" · CURRENT":"")}
+ setText("miniReferenceTitle","REF "+lapTime(ref.timeMs)+" · CALCULATED");
+}
+
 function render(){
  const d=liveData(STATE.data)?STATE.data:null,kind=d?category(d):"standby";
  document.body.dataset.session=kind;
