@@ -85,6 +85,23 @@
       </div>
       <div class="ers-status-row"><span>OVERTAKE</span><b id="overtakeValue">--</b></div>
     </section>
+    <section class="info-box car-box">
+      <header class="box-head red-head"><span>TYRE STATUS</span><small id="tyreCondition">--</small></header>
+      <div class="car-tyre-layout">
+        <svg class="car-silhouette" viewBox="0 0 100 170" aria-label="Top-down car and four tyre positions">
+          <path d="M50 5 L65 24 L72 55 L68 113 L62 153 L50 166 L38 153 L32 113 L28 55 L35 24 Z" fill="#18242a" stroke="#40ddd2" stroke-width="2"/>
+          <path d="M32 48 L7 58 L10 74 L31 68 M68 48 L93 58 L90 74 L69 68 M31 110 L7 105 L10 124 L34 128 M69 110 L93 105 L90 124 L66 128" fill="#202a30" stroke="#ef3947" stroke-width="2"/>
+          <rect x="5" y="51" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/><rect x="82" y="51" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/>
+          <rect x="5" y="101" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/><rect x="82" y="101" width="13" height="28" rx="4" fill="#080a0c" stroke="#84939a"/>
+          <path d="M50 12 L50 156" stroke="#6f8188" stroke-width="1" stroke-dasharray="3 4"/>
+        </svg>
+        <div class="main-tyre-tile tyre-fl" id="tyreFL"><b>FL</b><span id="tyreFLTemp">--</span><small id="tyreFLWear">--</small><i id="tyreFLPressure">--</i></div>
+        <div class="main-tyre-tile tyre-fr" id="tyreFR"><b>FR</b><span id="tyreFRTemp">--</span><small id="tyreFRWear">--</small><i id="tyreFRPressure">--</i></div>
+        <div class="main-tyre-tile tyre-rl" id="tyreRL"><b>RL</b><span id="tyreRLTemp">--</span><small id="tyreRLWear">--</small><i id="tyreRLPressure">--</i></div>
+        <div class="main-tyre-tile tyre-rr" id="tyreRR"><b>RR</b><span id="tyreRRTemp">--</span><small id="tyreRRWear">--</small><i id="tyreRRPressure">--</i></div>
+      </div>
+      <div class="tyre-meta"><b id="tyreCompound">--</b><span>STINT AGE <strong id="tyreStint">--</strong></span><span>AVG WEAR <strong id="tyreWearAverage">--</strong></span></div>
+    </section>
   </div>
 
   <div class="timing-grid">
@@ -98,10 +115,10 @@
     <div class="timing-cell race-cell"><span>RACE CONTROL</span><b id="safetyValue">--</b></div>
     <div class="timing-cell flag-cell"><span>FLAG</span><b id="flagValue">--</b></div>
   </div>
-  <div class="mini-sector-panel">
-    <div class="mini-sector-title"><b id="miniSectorTitle">MINI-SECTOR DELTA</b><span id="miniReferenceTitle">REFERENCE --</span></div>
-    <div id="miniStrip" class="mini-strip"><span class="mini-empty">NO VALID RECORDED COMPARISON</span></div>
-  </div>
+  <section class="track-map-panel" aria-label="Measured circuit mini-sector map">
+    <div class="track-map-title"><b>TRACK MAP · CALCULATED MINI-SECTORS</b><span id="miniReferenceTitle">REFERENCE --</span></div>
+    <div id="trackMapHost" class="track-map-host"></div>
+  </section>
   <div class="engineer-line"><span>PENALTIES</span><b id="penaltyValue">--</b><span>STATUS</span><b id="driverStatusValue">--</b></div>
 </section>
 
@@ -115,6 +132,7 @@
 <input id="loadFile" type="file" accept=".json,application/json" hidden>
 </main>
 <script src="minisectors.js"></script>
+<script src="trackmap.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
