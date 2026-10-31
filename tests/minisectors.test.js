@@ -1,12 +1,17 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict");
 const {calculateLap,compare}=require("../minisectors.js");
-const reference={trackLength:1000,timeMs:100000,samples:[
- {distance:0,timeMs:0},{distance:250,timeMs:25000},{distance:500,timeMs:55000},{distance:750,timeMs:90000},{distance:995,timeMs:99500}
-],completedTimeMs:100000};
-const current={trackLength:1000,completedTimeMs:null,samples:[
- {distance:0,timeMs:0},{distance:250,timeMs:20000},{distance:500,timeMs:46000},{distance:750,timeMs:78000},{distance:900,timeMs:93000}
-]};
+function samplesFor(times,endDistance=5000){
+ const prefix=[0];for(const t of times)prefix.push(prefix[prefix.length-1]+t);
+ const out=[];for(let distance=0;distance<=endDistance;distance+=25){
+  if(distance===5000){out.push({distance,timeMs:prefix[4]});continue}
+  const sector=Math.min(3,Math.floor(distance/1250)),inside=distance-sector*1250;
+  out.push({distance,timeMs:prefix[sector]+times[sector]*inside/1250});
+ }
+ return out
+}
+const reference={trackLength:5000,timeMs:100000,samples:samplesFor([25000,30000,35000,10000]),completedTimeMs:100000};
+const current={trackLength:5000,completedTimeMs:null,samples:samplesFor([20000,26000,32000,10000],3750)};
 test("calculates only measured mini-sector durations",()=>{
  const x=calculateLap(reference.samples,reference.trackLength,4,reference.timeMs);
  assert.equal(x.segments.length,4);
