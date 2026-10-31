@@ -90,7 +90,7 @@ function render(){
  setText("sessionTypeValue",d?(SESSIONS[d.sessionType]||"SESSION"):"--");setText("lapValue",d?num(d.lap):"--");setText("positionValue",d?num(d.position):"--");
  setText("standbyLine",d?"":STATE.status==="stale"||STATE.status==="disconnected"||STATE.status==="unsupported"?"TELEMETRY UNAVAILABLE · CHECK LINK":"STANDBY · WAITING FOR SESSION");$("standbyLine").classList.toggle("hidden",!!d);
  setText("speedValue",d?num(d.speed):"--");setText("gearValue",d?Number(d.gear)===0?"N":Number(d.gear)<0?"R":num(d.gear):"N");
- setText("lapTime",d?lapTime(d.currentLapMs):"--:--.---");setText("deltaValue",d?signedMs(d.deltaMs):"--");setText("deltaLabel",kind==="qualifying"?"DELTA TO SESSION BEST":"DELTA");
+ setText("lapTime",d?lapTime(d.currentLapMs):"--:--.---");const pbDeltaTime=d&&pb?referenceLapTimeAt(Number(d.lapDistance),pb):null;setText("deltaValue",d?(pbDeltaTime==null?signedMs(d.deltaMs):signedMs(Number(d.currentLapMs)-pbDeltaTime)):"--");setText("deltaLabel",pbDeltaTime!=null?"DELTA TO PERSONAL BEST":kind==="qualifying"?"DELTA TO SESSION BEST":"GAME DELTA");
  setText("lastLapValue",d?lapTime(d.lastLapMs):"--:--.---");const pb=personalBest(),bestLabel=document.querySelector(".lap-best span");setText("bestLapValue",pb?lapTime(pb.timeMs):d?lapTime(d.bestLapMs):"--:--.---");if(bestLabel)bestLabel.textContent=pb?"PERSONAL BEST":"SESSION BEST";
  setText("s1Value",d?lapTime(d.s1Ms):"--:--.---");setText("s2Value",d?lapTime(d.s2Ms):"--:--.---");setText("s3Value",d?lapTime(d.s3Ms):"--:--.---");
  setText("ersPercent",d?num(d.ersPercent,0,"%"):"--");setText("energyStore",d?num(d.energyKj,0):"--");setText("energyDeploy",d?num(d.energyUsedLapKj,0):"--");setText("energyHarvest",d?num(d.energyHarvestedLapKj,0):"--");
@@ -129,6 +129,16 @@ function referenceSampleAt(distance,ref){
  if(!ref||!Array.isArray(ref.samples))return null;let best=null,diff=Infinity;
  for(const s of ref.samples){const n=Math.abs(Number(s.distance)-distance);if(n<diff){diff=n;best=s}}
  return best&&diff<=Math.max(40,ref.trackLength/STATE.miniCount)?best:null;
+}
+function referenceLapTimeAt(distance,ref){
+ if(!ref||!Array.isArray(ref.samples)||!Number.isFinite(distance))return null;
+ const points=ref.samples;
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],gap=Number(b.distance)-Number(a.distance),time=Number(b.timeMs)-Number(a.timeMs);
+  if(Number(a.distance)<=distance&&Number(b.distance)>=distance&&gap>0&&gap<=Math.max(100,Number(ref.trackLength)/STATE.miniCount*2)&&time>0&&time<=1000)
+   return Number(a.timeMs)+time*(distance-Number(a.distance))/gap;
+ }
+ return null;
 }
 function renderDetail(page,d){
  const root=$("detailPage");let h='<header class="detail-heading"><span>FERMAXO RACING / LIVE ENGINEERING</span><b>'+({ers:"ERS SYSTEM",timing:"LAP & MINI-SECTOR TIMING",tyres:"TYRE ENGINEERING",telemetry:"TELEMETRY ANALYSIS",race:"RACE CONTROL",engineer:"RACE ENGINEER"}[page]||"DETAIL")+'</b></header>';
