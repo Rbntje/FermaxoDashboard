@@ -38,9 +38,9 @@ Enable Pages for the `main` branch and root folder. GitHub Pages serves the stat
 
 ## Current protocol scope
 
-The bridge validates packet format and exact packet length. The wheel accepts Car Telemetry only when its packetVersion is 1 and the expected fields are present; other versions are shown as unsupported rather than interpreted. It currently decodes only Car Telemetry: speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, tyre pressures and engine temperature. The LCD is laid out for additional packet fields, but the bridge does **not** yet decode lap timing, ERS energy, FIA flags, marshal zones, Safety Car/VSC state or delta, tyre wear, session information, or leaderboard. Those fields therefore remain unavailable in live mode. Recommendations and corner speed plans are not generated without supporting telemetry.
+The bridge validates packet format, packet version 1, and exact packet length. It decodes Car Telemetry, Session, Lap Data, Car Status, Event, and Car Damage packets for the player's car. This supplies live driving inputs, tyre temperatures, basic lap times and sectors, position, ERS store and usage, fuel, Safety Car/VSC status, game delta, basic FIA flag, and tyre wear when those packets are actually available. speed, throttle, steering, brake, gear, RPM, DRS, brake temperatures, tyre temperatures, tyre pressures and engine temperature. The LCD is laid out for additional packet fields, but the bridge does **not** yet decode lap timing, ERS energy, FIA flags, marshal zones, Safety Car/VSC state or delta, tyre wear, session information, or leaderboard. Those fields therefore remain unavailable in live mode. Recommendations and corner speed plans are not generated without supporting telemetry.
 
-The redesign has been checked for JavaScript syntax and that every referenced interface element exists in `index.html`. It has not yet been run against a live F1 UDP session or visually verified in a browser.
+The interface reconnects to the local bridge automatically and keeps the driving values visible on HOME while race alerts take priority. JavaScript syntax and interface element references are checked. A real game session and visual browser run are still needed to verify packet offsets against the user's game build.
 
 ## References
 
