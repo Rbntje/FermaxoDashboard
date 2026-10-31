@@ -52,7 +52,7 @@ function captureLapSample(d,persist=true){
  const distance=Number(d.lapDistance),time=Number(d.currentLapMs),length=Number(d.trackLength);
  if(!Number.isFinite(distance)||distance<0||!Number.isFinite(time)||time<0||length<=0)return;
  const prev=STATE.currentLapSamples[STATE.currentLapSamples.length-1];
- if(prev&&(distance<=prev.distance||time-prev.timeMs<80||STATE.currentLapSamples.length>=1400))return;
+ if(prev&&(distance<=prev.distance||time-prev.timeMs<350||STATE.currentLapSamples.length>=1400))return;
  STATE.currentLapSamples.push({distance,timeMs:time,trackLength:length,trackId:d.trackId,invalid:Number(d.currentLapInvalid)===1,speed:Number(d.speed),throttle:Number(d.throttle),brake:Number(d.brake),rpm:Number(d.rpm),gear:Number(d.gear),ersPercent:Number(d.ersPercent),driverStatus:Number(d.driverStatus),worldX:d.trackPointValid===true?Number(d.worldX):null,worldZ:d.trackPointValid===true?Number(d.worldZ):null,trackPointValid:d.trackPointValid===true,sector:Number(d.sector)});
 }
 function referenceComparison(samples,completedTime){
@@ -195,11 +195,6 @@ function render(){
  if(STATE.page!=="home"&&(detailPage!==STATE.page||Date.now()-detailAt>700)){renderDetail(STATE.page,d);detailPage=STATE.page;detailAt=Date.now()}
 }
 function row(label,value,unit=""){return '<div class="detail-row"><span>'+esc(label)+'</span><b>'+val(value,unit)+'</b></div>'}
-function miniTable(d){
- const ref=referenceLap(),current=STATE.currentLapSamples.map(s=>({distance:s.distance,timeMs:s.timeMs})),comparison=d&&ref?referenceComparison(current,null):null;
- if(!comparison)return '<p class="detail-note">MINI-SECTOR COMPARISON UNAVAILABLE · NEEDS A COMPLETE RECORDED REFERENCE LAP</p>';
- return '<div class="mini-history"><div class="mini-history-head"><span>MINI</span><span>LIVE / LAST</span><span>REFERENCE</span><span>DELTA</span></div>'+comparison.segments.map(s=>'<div class="mini-history-row"><span>M'+String(s.index).padStart(2,"0")+'</span><span>'+ (s.timeMs==null?"--":(s.timeMs/1000).toFixed(3)+"s")+'</span><span>'+(s.referenceMs==null?"--":(s.referenceMs/1000).toFixed(3)+"s")+'</span><b class="'+(s.deltaMs==null?"neutral":s.deltaMs<0?"gain":"loss")+'">'+(s.deltaMs==null?"--":signedMs(s.deltaMs))+'</b></div>').join("")+'</div>';
-}
 function refOptions(){
  chooseDefaultReference();return '<option value="">NO REFERENCE LAP</option>'+STATE.laps.filter(x=>x&&x.valid).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===STATE.referenceId?"selected":"")+'>'+esc("T"+x.trackId+" · LAP "+x.lapNumber+" · "+lapTime(x.timeMs))+'</option>').join("");
 }
