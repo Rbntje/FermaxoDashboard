@@ -17,6 +17,10 @@ test("calculates only measured mini-sector durations",()=>{
  assert.equal(x.segments.length,4);
  assert.deepEqual(x.segments.map(s=>Math.round(s.timeMs)),[25000,30000,35000,10000]);
 });
+test("accepts an endpoint sample that matches the measured lap completion time",()=>{
+ const x=calculateLap(reference.samples,reference.trackLength,4,reference.timeMs);
+ assert.equal(x.segments[3].timeMs,10000);
+});
 test("reports real gains as negative delta and losses as positive delta",()=>{
  const x=compare(current,reference,4);
  assert.equal(x.valid,true);
