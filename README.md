@@ -1,26 +1,25 @@
-# FERMAXO RACING — Virtual F1 Wheel
+# FERMAXO RACING — Phone LCD
 
-A full-screen, steering wheel-inspired display for F1 25 with the 2026 Season Pack and a local UDP-to-WebSocket bridge.
+A full-screen, screen-only driving display for F1 25 with the 2026 Season Pack. The phone is the display: there is no steering wheel illustration or hardware mockup.
 
 ## Quick start on Windows
 
 1. Download this repository (**Code → Download ZIP**) and extract it.
-2. Double-click `Start-Fermaxo.bat`. It installs the WebSocket dependency if needed, opens the wheel display and starts the receiver. Keep its terminal window open.
-3. In F1 25 open **Settings → Telemetry**. Enable UDP, set format to **2026**, and port to **20777**. If the game is on this PC, set receiver IP to `127.0.0.1`.
-4. The page connects to the bridge automatically. It shows **WAITING FOR F1 TELEMETRY** until real car telemetry arrives.
+2. Double-click `Start-Fermaxo.bat`. It installs the bridge dependency and opens the display. Keep the terminal window open.
+3. In F1 25 open **Settings → Telemetry**. Enable UDP, choose format **2026**, port **20777**, and set the receiver IP to `127.0.0.1` if F1 25 is running on this same PC.
+4. For a phone display, connect the phone to the same Wi-Fi/network as the gaming PC. Open the **Dashboard on phone** URL printed in the launcher window. If Windows Firewall asks, allow Python on your private network. The page detects the PC address and links to its telemetry bridge automatically.
+5. On the phone, rotate to landscape and use the browser's full-screen option if needed. The display also has a fullscreen control.
 
-For a console, enter the gaming PC's private LAN IP when the launcher asks for a UDP listen IP. Set that same PC IP as the console's receiver IP in game settings. Allow Python through Windows Firewall on the private network if prompted.
+For a console, enter the gaming PC's private LAN IP when the launcher asks for a UDP listen IP, then use that same IP as the receiver in F1 25 settings. Keep the phone and PC on the same local network.
 
-## Wheel controls
+## Display and controls
 
-- **HOME** keeps essential driving values and race alerts on the main LCD. Touch targets reflow to full-width, 50 px controls on phone-sized displays.
-- **ENERGY**, **TIMING**, and **ENGINEER** open secondary detail pages (ERS, completed session laps, tyres, fuel and received race-control messages). The physical **HOME** button returns immediately.
-- **LINK** connects/reconnects to `ws://localhost:20778`.
-- **DEMO** is manual and labelled. It never starts automatically.
-- **REC / SAVE / LOAD** record frames in browser memory, export JSON and replay a saved JSON file.
-- **VIEW** or the F key toggles fullscreen. Arrow keys change pages.
-
-When data is missing, the wheel shows `--` or `UNAVAILABLE`. It clears stale live values when the connection drops. Actual flags and Safety Car/VSC state automatically appear on HOME when the game packets report them. The VSC game delta is shown when present; this build does not invent recommended speeds or coaching.
+- The main LCD keeps gear, speed, RPM LEDs, throttle, brake, ERS, lap timing, sector times, position, race-control state and flag status visible.
+- Session type adjusts the display emphasis. Race-control alerts appear automatically on the main display.
+- **HOME**, **ERS**, **LAPS**, **TYRES**, **RACE**, and **DRIVER** are touchscreen pages. Detail pages only show when selected.
+- **LINK** retries the connection. The address field allows a custom bridge address.
+- **REC / SAVE / LOAD** on LAPS records actual received frames, exports JSON and replays a saved JSON recording. A replay is labelled as replay data.
+- Missing live fields show `--`; no active game session is shown as standby.
 
 ## Manual bridge start
 
@@ -32,27 +31,20 @@ py -m pip install -r requirements.txt
 py bridge.py
 ```
 
-The bridge listens on UDP 20777 and WebSocket 20778. By default, all services bind to loopback. To receive UDP from a console, bind UDP to the gaming PC's private address:
+The bridge listens for UDP on port 20777. WebSocket telemetry uses port 20778. The phone dashboard is served on port 20780, and the health endpoint is `http://<PC-address>:20780/health`. By default the web and WebSocket services bind to the local network interfaces for phone use. To receive console UDP, start the bridge with its LAN address:
 
 ```powershell
 py bridge.py --udp-host 192.168.1.20
 ```
 
-The dashboard still connects locally at `ws://localhost:20778`. The local health endpoint is `http://localhost:20779/`.
+For PC-only use, the dashboard URL is `http://127.0.0.1:20780/`.
 
-GitHub Pages can serve the static wheel, but cannot receive UDP. An HTTPS Pages site cannot connect to this local insecure `ws://` bridge; use the local launcher for the simplest setup or configure a secure `wss://` endpoint yourself.
+## Telemetry
 
-## Telemetry currently decoded
+The bridge checks format 2026, packet version 1, and known packet sizes. It decodes actual Car Telemetry, Session, Lap Data, Event, Session History, Car Status, Car Damage, and Car Telemetry 2 packets. This includes core driving inputs, game rev lights, ERS, current session/lap timing, safety-car state, basic flags and 2026 active aero/overtake fields. Straight Mode is shown only when the 2026 packet provides applicable active-aero telemetry; otherwise the screen shows DRS when available.
 
-The bridge checks the packet format, packet version 1 and exact 2026 packet lengths. It reads Car Telemetry, Session, Lap Data, Session History, Car Status, Event and Car Damage packets. The available fields include speed, throttle, brake, steering, gear, RPM and game rev LEDs, DRS, tyre/brake temperatures, tyre pressures/wear, lap and sector 1/2 times, current sector 3 when in that sector, session best lap and derived delta, race position, safety car/VSC status and delta, basic FIA flag state, fuel and ERS energy.
+VSC delta is shown from the game packet. The app does not estimate recommended speeds or invent engineer instructions. Double-yellow distinction, corner guidance, and driver suggestions remain unavailable unless decoded from game data.
 
-This is not yet the complete requested engineering suite. Double-yellow distinction, detailed penalty messages, engineer recommendations, per-corner guidance and a real track map are not decoded. Those areas remain unavailable. The built-in demo is not live game data.
+## Verification status
 
-## Verification
-
-The browser JavaScript syntax and HTML element references were checked. I attempted a synthetic bridge parser check, but this environment has no Python installation. The bridge has not been verified against a live game packet capture, and the wheel has not been visually checked in a browser yet.
-
-## References
-
-- [EA SPORTS F1 25 / 2026 Season Pack UDP specification](https://forums.ea.com/blog/f1-games-game-info-hub-en/ea-sports%E2%84%A2-f1%C2%AE25-2026-season-pack-udp-specification/12187347)
-- [Packet sizes and format notes](https://github.com/rdgonzaga/f1-game-telemetry/blob/main/docs/udp-spec.md)
+The repository files were updated through GitHub. I checked that the application code targets the new display element IDs and the connection uses the dashboard host when opened over the local network. This environment has not run a live F1 UDP session or a phone browser preview, so packet compatibility and real-device layout still need confirmation against the game and target phone.
