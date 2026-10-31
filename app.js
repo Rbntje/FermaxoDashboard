@@ -139,6 +139,8 @@ function renderDetail(page,d){
   h+=miniTable(d);
   const history=d&&Array.isArray(d.lapHistory)?d.lapHistory:[];
   h+='<div class="lap-table"><div class="table-head"><span>LAP</span><span>TIME</span><span>S1</span><span>S2</span><span>S3</span></div>'+history.slice(-5).reverse().map(x=>'<div class="table-row"><span>'+val(x.lap)+'</span><span>'+lapTime(x.time)+'</span><span>'+lapTime(x.s1)+'</span><span>'+lapTime(x.s2)+'</span><span>'+lapTime(x.s3)+'</span></div>').join("")+'</div>';
+  const ref=referenceLap(),savedRows=STATE.laps.slice(0,6).map(lap=>{const result=ref?Mini.compare(lap,ref,STATE.miniCount):null,valid=result&&result.segments.filter(s=>s.deltaMs!=null),largest=valid&&valid.length?valid.slice().sort((a,b)=>Math.abs(b.deltaMs)-Math.abs(a.deltaMs))[0]:null;return '<button class="saved-lap-button" data-ref-id="'+esc(lap.id)+'"><span>TRACK '+esc(lap.trackId)+' · LAP '+esc(lap.lapNumber)+'</span><b>'+lapTime(lap.timeMs)+'</b><small>'+(largest?'M'+String(largest.index).padStart(2,"0")+' '+signedMs(largest.deltaMs):'NO COMPARISON')+'</small></button>'}).join("");
+  h+='<div class="saved-lap-history"><b>SAVED MINI-SECTOR HISTORY · TAP A LAP TO SET REFERENCE</b><div>'+ (savedRows||'<small>NO COMPLETE VALID LAPS SAVED</small>') +'</div></div>';
   h+='<p class="detail-note">MINI-SECTORS ARE CALCULATED FROM RECEIVED LAP-DISTANCE / LAP-TIME SAMPLES, NOT GAME-PROVIDED SECTORS.</p>';
  }
  if(page==="tyres"){
@@ -168,6 +170,7 @@ function renderDetail(page,d){
  const laps=$("saveLapsButton");if(laps)laps.onclick=exportLaps;
  const load=$("loadLapsButton");if(load)load.onclick=()=>$("loadFile").click();
  const refSel=$("referenceSelect");if(refSel)refSel.onchange=e=>{STATE.referenceId=e.target.value;try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}renderedDetail="";render()};
+ root.querySelectorAll(".saved-lap-button").forEach(button=>button.onclick=()=>{STATE.referenceId=button.dataset.refId;try{localStorage.setItem("fermaxoReferenceLap",STATE.referenceId)}catch{}detailPage="";render()});
 }
 function toggleRecording(){STATE.recording=!STATE.recording;if(STATE.recording){STATE.frames=[];STATE.lastFrameAt=0}renderedDetail="";render()}
 function recordFrame(d){
